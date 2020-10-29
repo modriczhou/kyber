@@ -5,6 +5,7 @@
 # @Site    : 
 # @File    : pipeline.py
 # @Software: PyCharm
+import os
 
 class Pipeline(object):
     def __init__(self, raw_data, standard_data_path, standard_data_file, processor_cls, dataloader_cls):

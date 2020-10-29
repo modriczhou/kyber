@@ -1,10 +1,5 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# @Time    : 2020/7/28 18:22
-# @Author  : Yuansheng Zhou
-# @Site    : 
-# @File    : generator.py
-# @Software: PyCharm
+#
 
 import numpy as np
 

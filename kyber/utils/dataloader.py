@@ -110,11 +110,6 @@ class ClassifierLoader(BaseLoader):
         return generator
         # return generator.__iter__(tf_flag=tf_flag)
 
-
-    # def __len__(self):
-
-
-
 class SeqLoader(BaseLoader):
     """
     """

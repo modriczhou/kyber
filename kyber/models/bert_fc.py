@@ -1,7 +1,14 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# @Time    : 2020/10/29 14:30
-# @Author  : Yuansheng Zhou
-# @Site    : 
-# @File    : bert_fc.py.py
-# @Software: PyCharm
+
+import tensorflow as tf
+
+class BertFC(tf.keras.Model):
+    def __init__(self):
+        super(BertFC, self).__init__()
+
+    def call(self):
+        pass
+
+    def summary(self):
+        pass
+
