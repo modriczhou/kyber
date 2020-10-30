@@ -1,10 +1,4 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# @Time    : 2020/7/31 16:54
-# @Author  : Yuansheng Zhou
-# @Site    : 
-# @File    : dataloader.py
-# @Software: PyCharm
 
 from utils.component import Example, Vocab
 from collections import Counter

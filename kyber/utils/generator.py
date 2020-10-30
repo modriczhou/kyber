@@ -60,7 +60,6 @@ class Generator4Seq(DataGenerator):
     def __iter__(self, random=False):
         raise NotImplementedError
 
-
 class Batch(object):
     def __init__(self, batch_data, fields):
         self.name = None

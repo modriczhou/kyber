@@ -71,7 +71,7 @@ class THUNewsProcessor(BaseProcessor):
                         all_data.append([text_in, self.cate2id[cate]])
         return all_data
     
-    def save_file(self, standard_path, file_name, refresh=False):
-        if not os.path.exists(standard_path) or len(os.listdir(standard_path))==0 or refresh==True:
+    def save_file(self, standard_path, refresh=True):
+        if not os.path.exists(standard_path) or refresh==True:
             all_data = self.read4clf()
-            self.write_to_clf(all_data, os.path.join(standard_path, file_name))
+            self.write_to_clf(all_data, standard_path)

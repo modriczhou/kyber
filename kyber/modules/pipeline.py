@@ -6,12 +6,12 @@
 # @File    : pipeline.py
 # @Software: PyCharm
 import os
+import tensorflow as tf
 
 class Pipeline(object):
-    def __init__(self, raw_data, standard_data_path, standard_data_file, processor_cls, dataloader_cls):
+    def __init__(self, raw_data=None, standard_data=None, processor_cls=None, dataloader_cls=None):
         self.raw_data = raw_data
-        self.standard_data_path = standard_data_path
-        self.standard_data_file = standard_data_file
+        self.standard_data = standard_data
         self.processor_cls = processor_cls
         self.dataloader_cls = dataloader_cls
         self.data_loader = None
@@ -26,9 +26,13 @@ class Pipeline(object):
         :param standard_data_path: 处理后的标准数据的路径
         :param standard_data_file: 处理后的标准数据的文件名
         """
-        self.processor = self.processor_cls(self.raw_data)
-        self.processor.save_file(self.standard_data_path, self.standard_data_file)
-        print("File {} saved at {}.".format(self.standard_data_file, self.standard_data_path))
+        if self.raw_data is None and os.path.exists(self.standard_data):
+            return
+        else:
+            self.processor = self.processor_cls(self.raw_data)
+            self.processor.save_file(self.standard_data, refresh=False)
+
+        print("File saved at {}.".format(self.standard_data))
 
     def build_field(self):
         """
@@ -45,10 +49,10 @@ class Pipeline(object):
         :param batch_size: loader的batch size
         :return:
         """
-        standard_data = os.path.join(self.standard_data_path, self.standard_data_file)
-        self.data_loader = self.dataloader_cls(standard_data, \
+
+        self.data_loader = self.dataloader_cls(self.standard_data, \
                                                 batch_size=batch_size, fields=self.fields_dict, vocab_group=self.vocab_group)
-        print("Start loading data: {}".format(standard_data))
+        print("Start loading data: {}".format(self.standard_data))
         self.data_loader.load_data()
         print("Loader built and loading finished")
 
@@ -72,6 +76,46 @@ class Pipeline(object):
         """
         raise NotImplementedError
 
-    def fit(self, epochs=10):
+    def train(self, epochs=10, callbacks=None):
+        self.process_data()
+        self.build_field()
+        self.build_loader(batch_size=32)
+        self.train_dev_split()
+        self.build_vocab()
+        self.build_iter()
+        self.build_model()
+
         self.model.fit_generator(self.train_iter.forfit(), steps_per_epoch=len(self.train_iter), epochs=epochs, \
-                            validation_data=self.dev_iter.forfit(), validation_steps=len(self.dev_iter))
+                            validation_data=self.dev_iter.forfit(), validation_steps=len(self.dev_iter), callbacks=callbacks)
+
+    def save_model(self, model_path, model_name, weights_only=True):
+        """
+        :param model_path: 保存model的path，须为folder
+        :param weights_only: 是否为
+        :return:
+        """
+        if weights_only:
+            self.model.save_weights(os.path.join(model_path, model_name))
+        else:
+            self.model.save(os.path.join(model_path, model_name))
+
+    def load_model(self, model_file, weights_only = True):
+        if weights_only:
+            if not self.model:
+                self.build_model()
+            self.model.load_weights(model_file)
+        else:
+            self.model = tf.keras.models.load_model(model_file)
+
+    def test(self):
+        """
+        在test loader上测试效果
+        :return:
+        """
+        self.model.evaluate_generator(self.test_loader)
+
+    def inference(self, text):
+        if self.model is None:
+            print("Model not loaded")
+            return
+        return self.model.predict(text)

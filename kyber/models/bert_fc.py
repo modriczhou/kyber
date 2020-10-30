@@ -6,9 +6,9 @@ class BertFC(tf.keras.Model):
     def __init__(self):
         super(BertFC, self).__init__()
 
-    def call(self):
+    def call(self, inputs, *args):
         pass
 
-    def summary(self):
+    def summary(self, *args):
         pass
 

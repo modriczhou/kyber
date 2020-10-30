@@ -29,20 +29,26 @@ class TextCNNPipeline(Pipeline):
         opt = tf.keras.optimizers.Adam(learning_rate=0.001)
         self.model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
 
-if __name__ == '__main__':
+def train():
     text_cnn_pipeline = TextCNNPipeline(raw_data=Config.thu_news_raw_data, \
-                                        standard_data_path=Config.thu_news_standard_data,
-                                        standard_data_file=Config.standard_filename_clf,
+                                        standard_data = os.path.join(Config.thu_news_standard_data,Config.standard_filename_clf),
                                         processor_cls=THUNewsProcessor,
                                         dataloader_cls=ClassifierLoader)
-    text_cnn_pipeline.process_data()
-    text_cnn_pipeline.build_field()
-    text_cnn_pipeline.build_loader(batch_size=32)
-    text_cnn_pipeline.train_dev_split()
-    text_cnn_pipeline.build_vocab()
-    text_cnn_pipeline.build_iter()
-    text_cnn_pipeline.build_model()
-    text_cnn_pipeline.fit(epochs=20)
+
+    text_cnn_pipeline.train(epochs=10, callbacks=[])
+    model_name = "model_weights"
+    # if not os.path.exists(os.path.join(Config.text_cnn_thunews_model_path, model_name)):
+    text_cnn_pipeline.test()
+    text_cnn_pipeline.save_model(Config.text_cnn_thunews_model_path, model_name, weights_only=True)
+
+def predict():
+    text_cnn_pipeline = TextCNNPipeline()
+    text_cnn_pipeline.load_model(Config.text_cnn_thunews_model_path)
+    text_cnn_pipeline.inference("sss")
+
+if __name__ == '__main__':
+    train()
+
 
 
 
