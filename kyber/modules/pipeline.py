@@ -20,7 +20,7 @@ class Pipeline(object):
         self.fields_dict = None
         self.vocab_group = None
 
-    def process_data(self):
+    def process_data(self, refresh):
         """
         :param processor: 进行文本预处理的Processor class，ex. THUNewsProcessor
         :param standard_data_path: 处理后的标准数据的路径
@@ -30,7 +30,8 @@ class Pipeline(object):
             return
         else:
             self.processor = self.processor_cls(self.raw_data)
-            self.processor.save_file(self.standard_data, refresh=False)
+            refresh_flag = True if refresh else False
+            self.processor.save_file(self.standard_data, refresh=refresh_flag)
 
         print("File saved at {}.".format(self.standard_data))
 
@@ -76,8 +77,8 @@ class Pipeline(object):
         """
         raise NotImplementedError
 
-    def train(self, epochs=10, callbacks=None):
-        self.process_data()
+    def train(self, epochs=10, callbacks=None, data_refresh=False):
+        self.process_data(refresh=data_refresh)
         self.build_field()
         self.build_loader(batch_size=32)
         self.train_dev_split()
@@ -112,7 +113,7 @@ class Pipeline(object):
         在test loader上测试效果
         :return:
         """
-        self.model.evaluate_generator(self.test_loader)
+        self.model.evaluate_generator(self.test_iter.forfit())
 
     def inference(self, text):
         if self.model is None:

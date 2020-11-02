@@ -45,12 +45,12 @@ class BaseProcessor(object):
         with open(save_file, 'w', encoding='utf-8')as f:
             f.writelines("\n".join(["\t".join(str(r) for r in row) for row in ner_data]))
 
-class THUNewsProcessor(BaseProcessor):
+class THUCNewsProcessor(BaseProcessor):
     """
     Process THUNews Dataset to a standard format for text classfication. 
     """
     def __init__(self, data_path):
-        super(THUNewsProcessor, self).__init__(data_path)
+        super(THUCNewsProcessor, self).__init__(data_path)
         self.categories = ['体育', '财经', '房产', '家居', '教育', '科技', '时尚', '时政', '游戏', '娱乐']
         self.cate2id = dict(zip(self.categories, range(len(self.categories))))
 

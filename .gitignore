@@ -1,0 +1,12 @@
+/test_data/
+data/
+*.zip
+*.log
+__*__
+.*/
+*.swp
+saved_models/
+/saved_models/
+_*
+/saved_models/
+
