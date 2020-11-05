@@ -21,25 +21,27 @@ class CnnEncoder(layers.Layer):
         # self.embedding_exclusive = embedding_exclusive
         # if not self.embedding_exclusive:
         #     self.embedding = Embedding(input_dim=vocab_size, output_dim=)
-
-        filter_sizes = [3,4,5]
+        self.num_filters = num_filters
+        self.input_length = input_length
+        self.filter_sizes = [3,4,5]
         self.drop_ratio = drop_ratio
         self.embedding_dim = embedding_dim
-        self._reshape = Reshape((input_length, self.embedding_dim, 1)) # shape:(None, seq_len, self.embedding, 1)
 
-        self._conv_layer_0 = Conv2D(filters=num_filters, kernel_size=(filter_sizes[0], self.embedding_dim), \
+    def build(self, input_shape):
+        self._reshape = Reshape((self.input_length, self.embedding_dim, 1)) # shape:(None, seq_len, self.embedding, 1)
+        self._conv_layer_0 = Conv2D(filters=self.num_filters, kernel_size=(self.filter_sizes[0], self.embedding_dim), \
                              padding='valid', kernel_initializer='normal', activation='relu')
-        self._conv_layer_1 = Conv2D(filters=num_filters, kernel_size=(filter_sizes[1], self.embedding_dim), \
+        self._conv_layer_1 = Conv2D(filters=self.num_filters, kernel_size=(self.filter_sizes[1], self.embedding_dim), \
                              padding='valid', kernel_initializer='normal', activation='relu')
-        self._conv_layer_2 = Conv2D(filters=num_filters, kernel_size=(filter_sizes[2], self.embedding_dim), \
+        self._conv_layer_2 = Conv2D(filters=self.num_filters, kernel_size=(self.filter_sizes[2], self.embedding_dim), \
                              padding='valid', kernel_initializer='normal', activation='relu')
         # self.reshape = Reshape(())
-        self._maxpool_layer_0 = MaxPool2D(pool_size=(input_length + 1 - filter_sizes[0], 1), strides=(1,1), padding='valid')
-        self._maxpool_layer_1 = MaxPool2D(pool_size=(input_length + 1 - filter_sizes[1], 1), strides=(1, 1), padding='valid')
-        self._maxpool_layer_2 = MaxPool2D(pool_size=(input_length + 1 - filter_sizes[2], 1), strides=(1, 1), padding='valid')
+        self._maxpool_layer_0 = MaxPool2D(pool_size=(self.input_length + 1 - self.filter_sizes[0], 1), strides=(1,1), padding='valid')
+        self._maxpool_layer_1 = MaxPool2D(pool_size=(self.input_length + 1 - self.filter_sizes[1], 1), strides=(1, 1), padding='valid')
+        self._maxpool_layer_2 = MaxPool2D(pool_size=(self.input_length + 1 - self.filter_sizes[2], 1), strides=(1, 1), padding='valid')
+        super(CnnEncoder, self).build(input_shape)
 
-
-    def call(self, embeds):
+    def call(self, embeds, **kwargs):
         """
         :param embeds: batch embeds result
         :return:

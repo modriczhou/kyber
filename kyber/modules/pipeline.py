@@ -77,7 +77,16 @@ class Pipeline(object):
         """
         raise NotImplementedError
 
-    def train(self, epochs=10, callbacks=None, data_refresh=False):
+    def train(self, epochs, callbacks):
+        """
+        :param epochs:
+        :param callbacks:
+        :return:
+        定义训练，子类自定义
+        """
+        raise NotImplementedError
+
+    def build(self, data_refresh=False):
         self.process_data(refresh=data_refresh)
         self.build_field()
         self.build_loader(batch_size=32)
@@ -85,9 +94,6 @@ class Pipeline(object):
         self.build_vocab()
         self.build_iter()
         self.build_model()
-
-        self.model.fit_generator(self.train_iter.forfit(), steps_per_epoch=len(self.train_iter), epochs=epochs, \
-                            validation_data=self.dev_iter.forfit(), validation_steps=len(self.dev_iter), callbacks=callbacks)
 
     def save_model(self, model_path, model_name, weights_only=True):
         """
