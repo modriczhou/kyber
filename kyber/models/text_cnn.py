@@ -2,7 +2,7 @@
 import tensorflow as tf
 from modules.encoders.cnn_encoder import *
 from tensorflow.python.keras.layers import Input, Dense, Embedding
-
+import numpy as np
 class TextCNN(tf.keras.Model):
     def __init__(self, vocab_size, embedding_dim, num_classes, num_filters=512, seq_len=512):
         super(TextCNN, self).__init__()
@@ -21,7 +21,6 @@ class TextCNN(tf.keras.Model):
         embedding = self.embedding(inputs)
         encoding = self.cnn_encoder(embedding)
         output = self.linear_out(encoding)
-
         return output
 
     def summary(self, *args):

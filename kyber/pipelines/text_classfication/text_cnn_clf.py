@@ -61,8 +61,8 @@ def predict():
     print(res.argmax())
 
 if __name__ == '__main__':
-    # train()
-    predict()
+    train()
+    #  predict()
 
 
 

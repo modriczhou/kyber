@@ -47,10 +47,10 @@ def train():
     fasttext_pipeline.save(Config.text_cnn_thunews_model_path, model_name, weights_only=True)
 
 def predict():
-    text_cnn_pipeline = FastTextPipeline()
-    text_cnn_pipeline.load_model(Config.text_cnn_thunews_model_path)
-    text_cnn_pipeline.inference("sss")
-
+    fasttext_pipeline = FastTextPipeline()
+    fasttext_pipeline.load_model(Config.fasttext_thunews_model_path)
+    res = fasttext_pipeline.inference(["我想去打篮球"],row_type="list")
+    print(res.argmax())
 if __name__ == '__main__':
     train()
 
