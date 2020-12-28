@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from utils.component import Example, Vocab
+from kyber.utils.component import Example, Vocab
 from collections import Counter
 import numpy as np
-from utils.generator import *
+from kyber.utils.generator import *
 import tqdm
 
 class BaseLoader(object):
@@ -20,6 +20,7 @@ class BaseLoader(object):
 
     def load4seq(self):
         raise NotImplementedError
+
 
 class ClassifierLoader(BaseLoader):
     """
@@ -51,7 +52,10 @@ class ClassifierLoader(BaseLoader):
                 assert field in self._fields
                 self._field2vocab[field] = i
 
-    def build_vocab(self):
+    def build_vocab(self): # 后续可加入
+        """
+        :return:
+        """
         for vocab_key in self._vocab2field:
             vocab = Vocab(vocab_file=None, vocab_size=None, min_freq=1)
             vocab.fit_on_examples(self._all_examples, self._vocab2field[vocab_key])
@@ -65,7 +69,7 @@ class ClassifierLoader(BaseLoader):
 
     def set_vocab(self, built_vocabs):
         self.vocabs = built_vocabs
-
+        
     def load_data(self):
         """
         :return: 2d list of string:
@@ -103,6 +107,7 @@ class ClassifierLoader(BaseLoader):
         #     len(self._all_examples) % self.batch_size > 0)
         return generator
         # return generator.__iter__(tf_flag=tf_flag)
+
 
 class SeqLoader(BaseLoader):
     """

@@ -61,9 +61,9 @@ class THUCNewsProcessor(BaseProcessor):
         """
         all_data = []
         for cate in self.categories:
-            cate_path = os.path.join(self.data_path, cate)
+            cate_path = str(os.path.join(self.data_path, cate))
             # print(cate_path)
-            for cate_file in tqdm.tqdm(os.listdir(cate_path)[:2000]):
+            for cate_file in tqdm.tqdm(os.listdir(cate_path)[:200]):
                 if cate_file.split('.')[-1]=="txt":
                     text_in = self.open_file(os.path.join(cate_path, cate_file)).read().\
                         replace("\n"," ").replace("\t", " ").strip()

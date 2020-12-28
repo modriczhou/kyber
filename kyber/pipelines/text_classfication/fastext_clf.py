@@ -8,11 +8,11 @@
 
 
 import tensorflow as tf
-from config import *
-from utils import *
+from kyber.config import *
+from kyber.utils import *
 import os
-from modules.pipeline import Pipeline
-from models import *
+from kyber.modules.pipeline import Pipeline
+from kyber.models import *
 
 class FastTextPipeline(Pipeline):
     def build_field(self):
@@ -44,7 +44,7 @@ def train():
     model_name = "model_weights"
     # if not os.path.exists(os.path.join(Config.text_cnn_thunews_model_path, model_name)):
     fasttext_pipeline.test()
-    fasttext_pipeline.save_model(Config.text_cnn_thunews_model_path, model_name, weights_only=True)
+    fasttext_pipeline.save(Config.text_cnn_thunews_model_path, model_name, weights_only=True)
 
 def predict():
     text_cnn_pipeline = FastTextPipeline()

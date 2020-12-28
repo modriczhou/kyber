@@ -7,7 +7,9 @@
 # @Software: PyCharm
 import os
 import tensorflow as tf
-
+import pickle
+from kyber.utils import Example, Step
+import numpy as np
 class Pipeline(object):
     def __init__(self, raw_data=None, standard_data=None, processor_cls=None, dataloader_cls=None):
         self.raw_data = raw_data
@@ -19,6 +21,7 @@ class Pipeline(object):
         self.model = None
         self.fields_dict = None
         self.vocab_group = None
+        # self.fields = None
 
     def process_data(self, refresh):
         """
@@ -50,7 +53,6 @@ class Pipeline(object):
         :param batch_size: loader的batch size
         :return:
         """
-
         self.data_loader = self.dataloader_cls(self.standard_data, \
                                                 batch_size=batch_size, fields=self.fields_dict, vocab_group=self.vocab_group)
         print("Start loading data: {}".format(self.standard_data))
@@ -61,15 +63,16 @@ class Pipeline(object):
         self.train_loader, self.dev_loader, self.test_loader = self.data_loader.train_dev_split(train_ratio, dev_ratio)
 
     def build_vocab(self):
-        vocabs = self.train_loader.build_vocab()
-        self.dev_loader.set_vocab(vocabs)
-        self.test_loader.set_vocab(vocabs)
+        self.train_loader.build_vocab()
+        # self.dev_loader.set_vocab(vocabs)
+        # self.test_loader.set_vocab(vocabs)
 
     def build_iter(self):
         # 构造生成器
         self.train_iter = self.train_loader.build_iterator(tf_flag=True)
         self.dev_iter = self.dev_loader.build_iterator(tf_flag=True)
         self.test_iter = self.test_loader.build_iterator(tf_flag=True)
+        # print(self.train_iter.)
 
     def build_model(self):
         """
@@ -95,22 +98,28 @@ class Pipeline(object):
         self.build_iter()
         self.build_model()
 
-    def save_model(self, model_path, model_name, weights_only=True):
+    def save(self, model_path, model_name, fields_save=True, weights_only=True):
         """
+        保存model及在训练集上进行训练的vocab
         :param model_path: 保存model的path，须为folder
         :param weights_only: 是否为
         :return:
         """
+        if fields_save ==True:
+            with open(os.path.join(model_path, "fields_dict.pkl"), 'wb') as f:
+                 pickle.dump(self.fields_dict, f)
         if weights_only:
             self.model.save_weights(os.path.join(model_path, model_name))
         else:
-            self.model.save(os.path.join(model_path, model_name))
+            self.model.save(os.path.join(model_path, model_name), save_format='tf')
 
-    def load_model(self, model_file, weights_only = True):
+    def load_model(self, model_path, model_file, weights_only = True):
+        with open(os.path.join(model_path, "fields_dict.pkl"),"rb") as f:
+            self.fields_dict = pickle.load(f)
         if weights_only:
             if not self.model:
                 self.build_model()
-            self.model.load_weights(model_file)
+            self.model.load_weights(os.path.join(model_path, model_file))
         else:
             self.model = tf.keras.models.load_model(model_file)
 
@@ -119,10 +128,31 @@ class Pipeline(object):
         在test loader上测试效果
         :return:
         """
-        self.model.evaluate_generator(self.test_iter.forfit())
+        self.model.evaluate(self.test_iter.forfit(), steps=len(self.test_iter))
 
-    def inference(self, text):
+    def inference(self, input, row_type="list"):
+        """
+        对单条文本进行预测
+        :param text:
+        :return:
+        """
         if self.model is None:
             print("Model not loaded")
             return
-        return self.model.predict(text)
+        input_example=None
+        if row_type=="list":
+            input_example = Example.from_list(input, self.fields_dict)
+        elif row_type=="tsv":
+            input_example = Example.from_tsv(input, self.fields_dict)
+
+        #print(input_example)
+
+        if input_example:
+            #print("s")
+            step = Step(input_example, self.fields_dict)
+            # print(step.step_x, len(step.step_x))
+
+            return self.model.predict(step.step_x)[0]
+
+
+        # return self.model.predict(text)

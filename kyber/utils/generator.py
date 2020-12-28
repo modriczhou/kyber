@@ -51,6 +51,7 @@ class Generator4Clf(DataGenerator):
 
                 cur_batch, cur_size = [], 0
 
+
     def forfit(self):
         while True:
             for d in self.__iter__(True):
@@ -73,3 +74,21 @@ class Batch(object):
                 if field is not None:
                     field_batch = [getattr(x, name) for x in batch_data]
                     setattr(self, name, field.process_batch(field_batch))
+
+class Step(object):
+    """
+    Step data for inference
+    """
+    def __init__(self, step_data, fields):
+        x_data = []
+        # y_data = []
+        for name, field in fields.items():
+            if field is not None:
+                if not field.is_target:
+                    x_data.append(field.process_step(getattr(step_data, name)))
+                # else:
+                #     y_data.append(field.process_step(getattr(step_data, name)))
+
+        self.step_x = x_data[0] if len(x_data)==1 else x_data
+        # self.step_y = y_data[0] if len(y_data)==1 else y_data
+

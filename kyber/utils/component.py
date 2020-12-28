@@ -13,9 +13,24 @@ from tensorflow.keras.preprocessing.text import Tokenizer
 from collections import Counter
 import numpy as np
 
+class VocabEncoder(object):
+    def __init__(self, vocab):
+        self.vocab = vocab
+
+    def encode(self, text):
+        """
+        :param text:
+        :return:
+        """
+        pass
+
+
+    def from_bert_tokenzier(self, bert_tokenizer):
+        pass
+
 class Example(object):
     @classmethod
-    def from_tsv(cls, tsv_row, fields_dict):
+    def from_tsv(cls, tsv_row, fields_dict, label_flg=True):
         """
         :param tsv_row: data row separated by "\t"
         :param fields_dict: fields dict {field_name:field instance}
@@ -29,6 +44,27 @@ class Example(object):
                 setattr(example, key, fields_dict[key].tokenize(data_cols[i]))
 
         return example
+
+    @classmethod
+    def from_list(cls, list_row, fields_dict, target_flg=False):
+        """
+
+        :param list_row:
+        :param fields_dict:
+        :param target_flg: False，即为输入不包含target的部分
+        :return:
+        """
+        example = cls()
+
+        if not target_flg:
+            filtered_fields_keys = [key for key in fields_dict.keys() if not fields_dict[key].is_target]
+        else:
+            filtered_fields_keys = fields_dict.keys()
+        if len(list_row) == len(filtered_fields_keys):
+            for i, key in enumerate(filtered_fields_keys):
+                setattr(example, key, fields_dict[key].tokenize(list_row[i]))
+        return example
+
 
 class Vocab(object):
     PAD = 0
@@ -107,19 +143,6 @@ class Vocab(object):
     def ids_to_text(self, seq_ids):
         return [self.id2word(id) for id in seq_ids]
 
-class Batch(object):
-    def __init__(self, batch_data, fields):
-        self.name = None
-        if batch_data is not None:
-            self.batch_size = len(batch_data)
-            self.fields = fields
-            self.input_fields = [k for k, v in fields.items() if v is not None and not v.is_target]
-            self.target_fields = [k for k, v in fields.items() if v is not None and v.is_target]
-
-            for name, field in fields.items():
-                if field is not None:
-                    field_batch = [getattr(x, name) for x in batch_data]
-                    setattr(self, name, field.process_batch(field_batch))
 
 class Field(object):
     def __init__(self, name, tokenizer, seq_flag, is_target=False, pad_first=False, categorical=False, fix_length=None, num_classes=None):
@@ -149,17 +172,47 @@ class Field(object):
                 return ids_array[:seq_len] if seq_len else ids_array
         return seq_words[:seq_len] if seq_len else seq_words
 
-    def process_batch(self, batch_data):
+    def process_batch(self, batch_data, padding=True):
+        ##TODO:其中进行encode部分可以抽象出来，考虑和Bert的encode方式进行统一封装;
         """
         :param batch_data: list[list[str]]
         :return:
         """
         if self.seq_flag:
             batch_ids = [self.texts_to_ids(seq, seq_len=self.fix_length) for seq in batch_data]
-            padded_seqs = self.pad_sequences(batch_ids, length=self.fix_length, padding=self.vocab.PAD)
-            return padded_seqs
+            if padding:
+                padded_seqs = self.pad_sequences(batch_ids, length=self.fix_length, padding=self.vocab.PAD)
+                return padded_seqs
+            return batch_ids
         else:
             return tf.keras.utils.to_categorical(batch_data, num_classes=self.num_classes)
+            #TODO:这种似乎只能解决label的问题，对于input的部分无法记录cate和内容的对应关系，后面应该加入label encoder来解决
+
+    def process_step(self, step_data, padding=True):
+        """
+
+        :param step_data: list[str]
+        :param padding:
+        :return:
+        """
+        if self.seq_flag:
+            step_ids = self.texts_to_ids(step_data, seq_len=self.fix_length)
+            if padding:
+                padded_seq = self.pad_sequence(step_ids, length=self.fix_length, padding=self.vocab.PAD)
+                return padded_seq
+            return step_ids
+        else:
+            return tf.keras.utils.to_categorical(step_data, num_classes=self.num_classes)
+            # TODO:这种似乎只能解决label的问题，对于input的部分无法记录cate和内容的对应关系，后面应该加入label encoder来解决
+
+    def pad_sequence(self, input_seq, length=None, padding=0):
+        if not self.pad_first:
+            padded = np.array([np.concatenate([input_seq, [padding] * (length - len(input_seq))]) \
+                if len(input_seq)<length else input_seq[:length]])
+        else:
+            padded = np.array([np.concatenate([[padding] * (length - len(input_seq)), input_seq]) \
+                if len(input_seq)<length else input_seq[:length]])
+        return padded
 
     def pad_sequences(self, input_seqs, length=None, padding=0):
         if not length:

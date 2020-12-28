@@ -6,15 +6,15 @@
     Data:   THUCNews
 """
 import tensorflow as tf
-from config import *
-from utils import *
-from models import TextCNN
+from kyber.config import *
+from kyber.utils import *
+from kyber.models import TextCNN
 import os
-from modules.pipeline import Pipeline
+from kyber.modules.pipeline import Pipeline
 
 class TextCNNPipeline(Pipeline):
     def build_field(self):
-        news_txt_field = Field(name='news_text', tokenizer=JiebaTokenizer, seq_flag=True, fix_length=512)
+        news_txt_field = Field(name='news_text', tokenizer=CharTokenizer, seq_flag=True, fix_length=512)
         label_filed = Field(name='label', tokenizer=None, seq_flag=False, is_target=True, categorical=True,
                             num_classes=10)
         self.fields_dict = {"news_text": news_txt_field, "label": label_filed}
@@ -36,7 +36,8 @@ class TextCNNPipeline(Pipeline):
         """
         opt = tf.keras.optimizers.Adam(learning_rate=0.001)
         self.model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
-        self.model.fit_generator(self.train_iter.forfit(), steps_per_epoch=len(self.train_iter), epochs=epochs, \
+
+        self.model.fit(self.train_iter.forfit(), steps_per_epoch=len(self.train_iter), epochs=epochs, \
                             validation_data=self.dev_iter.forfit(), validation_steps=len(self.dev_iter), callbacks=callbacks)
 
 def train():
@@ -45,18 +46,23 @@ def train():
                                         processor_cls=THUCNewsProcessor,
                                         dataloader_cls=ClassifierLoader)
     text_cnn_pipeline.build(data_refresh=True)
-    text_cnn_pipeline.train(epochs=10, callbacks=[])
-    model_name = "model_weights"
+    text_cnn_pipeline.train(epochs=3, callbacks=[])
+    model_name = "model.weights"
+    ## evaluate on test data loader
     text_cnn_pipeline.test()
-    text_cnn_pipeline.save_model(Config.text_cnn_thunews_model_path, model_name, weights_only=True)
+    text_cnn_pipeline.save(Config.text_cnn_thunews_model_path, model_name, fields_save=True, weights_only=True)
+
 
 def predict():
     text_cnn_pipeline = TextCNNPipeline()
-    text_cnn_pipeline.load_model(Config.text_cnn_thunews_model_path)
-    text_cnn_pipeline.inference("sss")
+    text_cnn_pipeline.load_model(Config.text_cnn_thunews_model_path, "model.weights")
+    # text_cnn_pipeline.build()
+    res = text_cnn_pipeline.inference(["我想去打篮球"],row_type="list")
+    print(res.argmax())
 
 if __name__ == '__main__':
-    train()
+    # train()
+    predict()
 
 
 

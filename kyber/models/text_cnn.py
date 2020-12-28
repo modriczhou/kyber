@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-
+import tensorflow as tf
 from modules.encoders.cnn_encoder import *
-from tensorflow.keras.layers import Input, Dense, Embedding
+from tensorflow.python.keras.layers import Input, Dense, Embedding
 
 class TextCNN(tf.keras.Model):
     def __init__(self, vocab_size, embedding_dim, num_classes, num_filters=512, seq_len=512):
