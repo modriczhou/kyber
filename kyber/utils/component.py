@@ -223,7 +223,6 @@ class Field(object):
                 np.concatenate([x, [padding] * (length - len(x))])
                 if len(x) < length else x[:length] for x in input_seqs
             ])
-
         else:
             padded = np.array([
                 np.concatenate([[padding] * (length - len(x)), x])

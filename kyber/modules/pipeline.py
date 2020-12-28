@@ -105,6 +105,8 @@ class Pipeline(object):
         :param weights_only: 是否为
         :return:
         """
+        if not os.path.exists(model_path):
+            os.mkdir(model_path)
         if fields_save ==True:
             with open(os.path.join(model_path, "fields_dict.pkl"), 'wb') as f:
                  pickle.dump(self.fields_dict, f)
@@ -151,7 +153,6 @@ class Pipeline(object):
             #print("s")
             step = Step(input_example, self.fields_dict)
             # print(step.step_x, len(step.step_x))
-
             return self.model.predict(step.step_x)[0]
 
 

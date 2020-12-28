@@ -44,11 +44,11 @@ def train():
     model_name = "model_weights"
     # if not os.path.exists(os.path.join(Config.text_cnn_thunews_model_path, model_name)):
     fasttext_pipeline.test()
-    fasttext_pipeline.save(Config.text_cnn_thunews_model_path, model_name, weights_only=True)
+    fasttext_pipeline.save(Config.text_cnn_thucnews_model_path, model_name, weights_only=True)
 
 def predict():
     fasttext_pipeline = FastTextPipeline()
-    fasttext_pipeline.load_model(Config.fasttext_thunews_model_path)
+    fasttext_pipeline.load_model(Config.fasttext_thucnews_model_path)
     res = fasttext_pipeline.inference(["我想去打篮球"],row_type="list")
     print(res.argmax())
 if __name__ == '__main__':
