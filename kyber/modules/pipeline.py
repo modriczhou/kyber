@@ -8,7 +8,7 @@
 import os
 import tensorflow as tf
 import pickle
-from kyber.utils import Example, Step
+from utils import Example, Step
 import numpy as np
 class Pipeline(object):
     def __init__(self, raw_data=None, standard_data=None, processor_cls=None, dataloader_cls=None):
@@ -21,6 +21,7 @@ class Pipeline(object):
         self.model = None
         self.fields_dict = None
         self.vocab_group = None
+        self.bert_dict = None
         # self.fields = None
 
     def process_data(self, refresh):
@@ -54,7 +55,7 @@ class Pipeline(object):
         :return:
         """
         self.data_loader = self.dataloader_cls(self.standard_data, \
-                                                batch_size=batch_size, fields=self.fields_dict, vocab_group=self.vocab_group)
+                                                batch_size=batch_size, fields=self.fields_dict, vocab_group=self.vocab_group, bert_dict=self.bert_dict)
         print("Start loading data: {}".format(self.standard_data))
         self.data_loader.load_data()
         print("Loader built and loading finished")
@@ -89,10 +90,11 @@ class Pipeline(object):
         """
         raise NotImplementedError
 
-    def build(self, data_refresh=False):
+    def build(self, batch_size=32, data_refresh=False):
         self.process_data(refresh=data_refresh)
         self.build_field()
-        self.build_loader(batch_size=32)
+        # print(self.bert_dict)
+        self.build_loader(batch_size=batch_size)
         self.train_dev_split()
         self.build_vocab()
         self.build_iter()

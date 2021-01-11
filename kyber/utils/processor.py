@@ -63,7 +63,7 @@ class THUCNewsProcessor(BaseProcessor):
         for cate in self.categories:
             cate_path = str(os.path.join(self.data_path, cate))
             # print(cate_path)
-            for cate_file in tqdm.tqdm(os.listdir(cate_path)[:200]): ##TODO: 后续可加入frac参数，控制数据比例
+            for cate_file in tqdm.tqdm(os.listdir(cate_path)[:1000]): ##TODO: 后续可加入frac参数，控制数据比例
                 if cate_file.split('.')[-1]=="txt":
                     text_in = self.open_file(os.path.join(cate_path, cate_file)).read().\
                         replace("\n"," ").replace("\t", " ").strip()

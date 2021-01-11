@@ -60,3 +60,5 @@ class CnnEncoder(layers.Layer):
         dropout = Dropout(self.drop_ratio)(flatten)
 
         return dropout
+
+    # def __call__(self, *args, **kwargs):

@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from kyber.utils.component import Example, Vocab
+from utils.component import *
+from utils.bert_tokenizer import Tokenizer
 from collections import Counter
 import numpy as np
-from kyber.utils.generator import *
+from utils.generator import *
 import tqdm
 
 class BaseLoader(object):
@@ -26,7 +27,7 @@ class ClassifierLoader(BaseLoader):
     """
     Data loader for text classification.
     """
-    def __init__(self, data_path: str, batch_size: int, fields, vocab_group):
+    def __init__(self, data_path: str, batch_size: int, fields, vocab_group, bert_dict=None):
         """
         :param fields: dict of fields for this data {field_name: filed_class}
         :param data_path: standard classification data file path
@@ -40,10 +41,12 @@ class ClassifierLoader(BaseLoader):
         self._vocab_group = vocab_group
         self.vocabs = dict()
         self.batch_size = batch_size
-
+        self._bert_dict = bert_dict
         self._all_examples = []
+
         # self._steps = len(self._all_data[0]) // self.batch_size + int(len(self._all_data[0]) % self.batch_size != 0)
         self.map_dict_field()
+
 
     def map_dict_field(self):
         for i, group in enumerate(self._vocab_group):
@@ -57,8 +60,12 @@ class ClassifierLoader(BaseLoader):
         :return:
         """
         for vocab_key in self._vocab2field:
-            vocab = Vocab(vocab_file=None, vocab_size=None, min_freq=1)
-            vocab.fit_on_examples(self._all_examples, self._vocab2field[vocab_key])
+            # print(self._vocab2field[vocab_key])
+            if not self._fields[self._vocab2field[vocab_key][0]].bert_flag:
+                vocab = Vocab(vocab_file=None, vocab_size=None, min_freq=1)
+                vocab.fit_on_examples(self._all_examples, self._vocab2field[vocab_key])
+            else:
+                vocab = BertVocab(self._bert_dict)
             self.vocabs[vocab_key] = vocab
             # Set vocab for each field
             for field in self._vocab2field[vocab_key]:
@@ -91,9 +98,9 @@ class ClassifierLoader(BaseLoader):
         cut1 = int(len(self._all_examples) * train_ratio)
         cut2 = int(len(self._all_examples) * (train_ratio + dev_ratio))
 
-        train_loader = ClassifierLoader(self.data_path, self.batch_size, self._fields, self._vocab_group)
-        dev_loader = ClassifierLoader(self.data_path, self.batch_size, self._fields, self._vocab_group)
-        test_loader = ClassifierLoader(self.data_path, self.batch_size, self._fields, self._vocab_group)
+        train_loader = ClassifierLoader(self.data_path, self.batch_size, self._fields, self._vocab_group, self._bert_dict)
+        dev_loader = ClassifierLoader(self.data_path, self.batch_size, self._fields, self._vocab_group, self._bert_dict)
+        test_loader = ClassifierLoader(self.data_path, self.batch_size, self._fields, self._vocab_group, self._bert_dict)
 
         train_loader.set_examples(self._all_examples[:cut1])
         dev_loader.set_examples(self._all_examples[cut1:cut2])

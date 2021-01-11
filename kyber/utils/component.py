@@ -9,24 +9,26 @@
 import abc
 import os
 import tensorflow as tf
-from tensorflow.keras.preprocessing.text import Tokenizer
+from utils.bert_tokenizer import Tokenizer
 from collections import Counter
 import numpy as np
 
-class VocabEncoder(object):
-    def __init__(self, vocab):
-        self.vocab = vocab
 
-    def encode(self, text):
+class BertVocab(object):
+
+    def __init__(self, bert_dict):
+        print(bert_dict)
+        self.tokenizer = Tokenizer(bert_dict, do_lower_case=True)
+        self.PAD = self.tokenizer.token_to_id(self.tokenizer._token_pad)
+
+    def text_to_ids(self, text):
         """
         :param text:
-        :return:
+        :return: [input_ids, token_type_ids]
         """
-        pass
 
+        return self.tokenizer.encode(text)
 
-    def from_bert_tokenzier(self, bert_tokenizer):
-        pass
 
 class Example(object):
     @classmethod
@@ -144,8 +146,11 @@ class Vocab(object):
         return [self.id2word(id) for id in seq_ids]
 
 
+
+
 class Field(object):
-    def __init__(self, name, tokenizer, seq_flag, is_target=False, pad_first=False, categorical=False, fix_length=None, num_classes=None):
+    def __init__(self, name, tokenizer, seq_flag, is_target=False, pad_first=False, categorical=False,
+                 bert_flag=False,fix_length=None, num_classes=None):
         self.seq_flag = seq_flag
         self.vocab = None
         self.tokenizer = tokenizer
@@ -155,12 +160,14 @@ class Field(object):
         self.categorical = categorical
         self.fix_length = fix_length
         self.num_classes = num_classes
+        self.bert_flag = bert_flag  ## 判断该field是否采用bert tokenizer进行处理
 
     def set_vocab(self, vocab):
         self.vocab = vocab
 
     def tokenize(self, sentence):
-        if self.seq_flag:
+        if self.seq_flag and not self.bert_flag:
+            ## Bert可以不用分词，直接在后面进行encode
             return self.tokenizer.tokenize(text=sentence)
         return sentence
 
@@ -168,8 +175,13 @@ class Field(object):
         if self.seq_flag:
             if self.vocab:
                 ids_array = self.vocab.text_to_ids(seq_words)
-                # print(ids_array)
-                return ids_array[:seq_len] if seq_len else ids_array
+                if not self.bert_flag:
+                    # print(ids_array)
+                    return [ids_array[:seq_len] if seq_len else ids_array]
+                else:
+                    # 对于bert tokenizer后的结果为[input_ids, token_type_ids]，所以要分别截断
+                    return [ids[:seq_len] if seq_len else ids for ids in ids_array]
+
         return seq_words[:seq_len] if seq_len else seq_words
 
     def process_batch(self, batch_data, padding=True):
@@ -178,12 +190,23 @@ class Field(object):
         :param batch_data: list[list[str]]
         :return:
         """
+
+        seq_num = 2 if self.bert_flag else 1
+        batch_res = [[] for _ in range(seq_num)]
+        #batch_res = [[]]
+        padded_res = [None for _ in range(seq_num)]
         if self.seq_flag:
-            batch_ids = [self.texts_to_ids(seq, seq_len=self.fix_length) for seq in batch_data]
+            for seq in batch_data:
+                # seq_num = np.array(seq).ndim
+                seq_res = self.texts_to_ids(seq, seq_len=self.fix_length)
+                for i in range(seq_num):
+                    batch_res[i].append(seq_res[i])
             if padding:
-                padded_seqs = self.pad_sequences(batch_ids, length=self.fix_length, padding=self.vocab.PAD)
-                return padded_seqs
-            return batch_ids
+                for i in range(len(batch_res)):
+                    padded_res[i] = self.pad_sequences(batch_res[i], length=self.fix_length, padding=self.vocab.PAD)
+                # padded_seqs = self.pad_sequences(batch_ids, length=self.fix_length, padding=self.vocab.PAD)
+                return tuple(padded_res) if len(padded_res)>1 else padded_res[0]
+            return tuple(batch_res) if len(batch_res)>1 else batch_res[0]
         else:
             return tf.keras.utils.to_categorical(batch_data, num_classes=self.num_classes)
             #TODO:这种似乎只能解决label的问题，对于input的部分无法记录cate和内容的对应关系，后面应该加入label encoder来解决

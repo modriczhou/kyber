@@ -1,18 +1,9 @@
-#h!/usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# @Author  : Yuansheng Zhou
-import tensorflow as tf
-from tensorflow.keras.layers import Layer
-
-
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras import layers
-from tensorflow.keras import backend as K
-
-"""
-## Implement multi head self attention as a Keras layer
-"""
+from tensorflow.python.keras import layers
+from tensorflow.python.keras import backend as K
 
 class MultiHeadSelfAttention(layers.Layer):
     def __init__(self, embed_dim, num_heads=8):
@@ -24,10 +15,10 @@ class MultiHeadSelfAttention(layers.Layer):
                 f"embedding dimension = {embed_dim} should be divisible by number of heads = {num_heads}"
             )
         self.projection_dim = embed_dim // num_heads
-        self.query_dense = layers.Dense(embed_dim)
-        self.key_dense = layers.Dense(embed_dim)
-        self.value_dense = layers.Dense(embed_dim)
-        self.combine_heads = layers.Dense(embed_dim)
+        self.query_dense = layers.Dense(embed_dim, name="query")
+        self.key_dense = layers.Dense(embed_dim, name="key")
+        self.value_dense = layers.Dense(embed_dim, name="value")
+        self.combine_heads = layers.Dense(embed_dim, name="combine_heads")
 
     def attention(self, query, key, value,mask=None):
         score = tf.matmul(query, key, transpose_b=True)
@@ -41,16 +32,21 @@ class MultiHeadSelfAttention(layers.Layer):
         # if mask is not None:
 
         # print("mask_size:",mask.shape)
-
-        attn_mask = tf.cast(mask[:, tf.newaxis, tf.newaxis, :], dtype=tf.float32)
+        '''
+        # Create a 3D attention mask from a 2D tensor mask.
+        # Sizes are [batch_size, 1, 1, to_seq_length]
+        # So we can broadcast to [batch_size, num_heads, from_seq_length, to_seq_length]
+        '''
+        if mask:
+            attn_mask = tf.cast(mask[:, tf.newaxis, tf.newaxis, :], dtype=tf.float32)
         # attn_mask = K.repeat(mask, dim_key)
         # print("attn_mask:",attn_mask.shape)
 
         # attn_mask = tf.transpose(attn_mask, [0,1,3,2])
         # print("attn_mask after trans:", attn_mask.shape)
-        attn_mask = (1.0 - attn_mask) * -10000000.0
+            attn_mask = (1.0 - attn_mask) * -10000000.0
 
-        scaled_score = scaled_score + attn_mask
+            scaled_score = scaled_score + attn_mask
 
         weights = tf.nn.softmax(scaled_score, axis=-1)
         output = tf.matmul(weights, value)
@@ -91,34 +87,6 @@ class MultiHeadSelfAttention(layers.Layer):
         )  # (batch_size, seq_len, embed_dim)
         return output
 
-
-"""
-## Implement a Transformer block as a layer
-"""
-
-class TransformerBlock(layers.Layer):
-    def __init__(self, embed_dim, num_heads, ff_dim,rate=0.1):
-        super(TransformerBlock, self).__init__()
-        self.att = MultiHeadSelfAttention(embed_dim, num_heads)
-        self.ffn = keras.Sequential(
-            [layers.Dense(ff_dim, activation="relu"), layers.Dense(embed_dim)]
-        )
-        self.layernorm1 = layers.LayerNormalization(epsilon=1e-6)
-        self.layernorm2 = layers.LayerNormalization(epsilon=1e-6)
-        self.dropout1 = layers.Dropout(rate)
-        self.dropout2 = layers.Dropout(rate)
-
-    def call(self, inputs, training, mask=None):
-        attn_output = self.att(inputs, mask)
-        # print("attn_output size:", attn_output.shape)
-        attn_output = self.dropout1(attn_output, training=training)
-        out1 = self.layernorm1(inputs + attn_output)
-        ffn_output = self.ffn(out1)
-        ffn_output = self.dropout2(ffn_output, training=training)
-        # print("ff_output:",ffn_output.shape)
-        return self.layernorm2(out1 + ffn_output)
-
-
 """
 ## Implement embedding layer
 Two seperate embedding layers, one for tokens, one for token index (positions).
@@ -136,7 +104,6 @@ class TokenAndPositionEmbedding(layers.Layer):
         positions = self.pos_emb(positions)
         x = self.token_emb(x)
         return x + positions
-
 
 class MeanPool(layers.Layer):
   def __init__(self, **kwargs):

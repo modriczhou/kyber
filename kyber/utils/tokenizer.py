@@ -48,5 +48,3 @@ class CharTokenizer(Tokenizer):
     def tokenize(cls, text):
         return list(text.strip())
 
-class BertTokenizer(Tokenizer):
-    pass
