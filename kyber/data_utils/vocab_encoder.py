@@ -6,7 +6,7 @@
 # @File    : vocab_encoder.py
 # @Software: PyCharm
 
-from kyber.utils import Vocab
+from kyber.data_utils import Vocab
 
 
 class VocabEncoder(object):

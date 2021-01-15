@@ -9,10 +9,9 @@
 import abc
 import os
 import tensorflow as tf
-from utils.bert_tokenizer import Tokenizer
+from data_utils.bert_tokenizer import Tokenizer
 from collections import Counter
 import numpy as np
-
 
 class BertVocab(object):
 
@@ -20,19 +19,20 @@ class BertVocab(object):
         print(bert_dict)
         self.tokenizer = Tokenizer(bert_dict, do_lower_case=True)
         self.PAD = self.tokenizer.token_to_id(self.tokenizer._token_pad)
+        # self.max_length=max_length
 
-    def text_to_ids(self, text):
+    def text_to_ids(self, text, max_length=512):
         """
         :param text:
         :return: [input_ids, token_type_ids]
         """
-
-        return self.tokenizer.encode(text)
-
+        if isinstance(text, str):
+            return self.tokenizer.encode(text, max_length=max_length)
+        
 
 class Example(object):
     @classmethod
-    def from_tsv(cls, tsv_row, fields_dict, label_flg=True):
+    def from_tsv(cls, tsv_row, fields_dict, sep = '\t', label_flg=True):
         """
         :param tsv_row: data row separated by "\t"
         :param fields_dict: fields dict {field_name:field instance}
@@ -44,11 +44,11 @@ class Example(object):
         if len(data_cols) == len(fields_dict):
             for i, key in enumerate(fields_dict.keys()):
                 setattr(example, key, fields_dict[key].tokenize(data_cols[i]))
-
+                # TODO: 此处可把tokenize封装到一个函数里，并根据类型判断是否需要进行分词
         return example
 
     @classmethod
-    def from_list(cls, list_row, fields_dict, target_flg=False):
+    def from_list(cls, list_row, fields_dict, label_flg=False):
         """
 
         :param list_row:
@@ -58,7 +58,7 @@ class Example(object):
         """
         example = cls()
 
-        if not target_flg:
+        if not label_flg:
             filtered_fields_keys = [key for key in fields_dict.keys() if not fields_dict[key].is_target]
         else:
             filtered_fields_keys = fields_dict.keys()
@@ -66,6 +66,26 @@ class Example(object):
             for i, key in enumerate(filtered_fields_keys):
                 setattr(example, key, fields_dict[key].tokenize(list_row[i]))
         return example
+
+    # @classmethod
+    # def from_list(cls, list_seqs, fields_dict, label_flag=True):
+    #     """
+    #     :param list_seqs: list[seq], 每个column对应一个
+    #     :fields_dict:
+    #     :return:
+    #     """
+    #     example = cls()
+    #     if not label_flag:
+    #         filtered_fields_keys = [key for key in fields_dict.keys() if not fields_dict[key].is_target]
+    #     else:
+    #         filtered_fields_keys = fields_dict.keys()
+    #
+    #     if len(list_seqs) == len(filtered_fields_keys):
+    #         for i, key in enumerate(filtered_fields_keys):
+    #             setattr(example, key, fields_dict[key].tokenize(list_row[i]))
+    #     return example
+
+
 
 
 class Vocab(object):
@@ -100,6 +120,8 @@ class Vocab(object):
         for ex in examples_list:
             for field in field_list:
                 words = getattr(ex, field)
+                if not field.seq_flag:
+                    words = [words]         # counter update需要iterable的对象
                 self.insert_words(words)
         self.build_vocab()
 
@@ -139,42 +161,52 @@ class Vocab(object):
     def load_embedding(self):
         raise NotImplementedError
 
-    def text_to_ids(self, seq_words):
-        return [self.word2id(word) for word in seq_words]
+    def text_to_ids(self, seq_words, max_len=None):
+        return [self.word2id(word) for word in seq_words][:max_len]
 
     def ids_to_text(self, seq_ids):
         return [self.id2word(id) for id in seq_ids]
 
 
 
-
 class Field(object):
     def __init__(self, name, tokenizer, seq_flag, is_target=False, pad_first=False, categorical=False,
-                 bert_flag=False,fix_length=None, num_classes=None):
-        self.seq_flag = seq_flag
+                 bert_flag=False,fix_length=None, num_classes=None, max_length=None):
+        self.seq_flag = seq_flag            # 判断该field是否采用序列化tokenize
         self.vocab = None
         self.tokenizer = tokenizer
-        self.is_target = is_target
+        self.is_target = is_target          # 标志是否为target，用于tf中生成训练数据，区分x,y
         self.name = name
         self.pad_first = pad_first
-        self.categorical = categorical
+        self.categorical = categorical      # 是否为标签数值，需要转化为categorical的离散形式
         self.fix_length = fix_length
         self.num_classes = num_classes
-        self.bert_flag = bert_flag  ## 判断该field是否采用bert tokenizer进行处理
+        self.bert_flag = bert_flag          # 判断该field是否采用bert tokenizer进行处理
+        self.max_length = max_length        # 最大长度，适用于bert tokenizer进行encode，vocab进行index转换
 
     def set_vocab(self, vocab):
         self.vocab = vocab
 
+    def build_vocab(self):
+        """
+        Field根据词表来直接build vocab
+        :return:
+        """
+        raise NotImplementedError
+
+
     def tokenize(self, sentence):
         if self.seq_flag and not self.bert_flag:
             ## Bert可以不用分词，直接在后面进行encode
-            return self.tokenizer.tokenize(text=sentence)
+            if isinstance(sentence, str):
+                # 只对str类型进行分词，如果已经是list[word1, word2..]即直接返回
+                return self.tokenizer.tokenize(text=sentence)
         return sentence
 
-    def texts_to_ids(self, seq_words, seq_len):
+    def texts_to_ids(self, seq_words, seq_len, max_len):
         if self.seq_flag:
             if self.vocab:
-                ids_array = self.vocab.text_to_ids(seq_words)
+                ids_array = self.vocab.text_to_ids(seq_words, max_len)
                 if not self.bert_flag:
                     # print(ids_array)
                     return [ids_array[:seq_len] if seq_len else ids_array]
@@ -182,6 +214,8 @@ class Field(object):
                     # 对于bert tokenizer后的结果为[input_ids, token_type_ids]，所以要分别截断
                     return [ids[:seq_len] if seq_len else ids for ids in ids_array]
 
+        # return self.vocab.text_to_ids()
+        # return self.vocab.text_to_ids([seq_words], max_len)  #对整个field的值进行index转换
         return seq_words[:seq_len] if seq_len else seq_words
 
     def process_batch(self, batch_data, padding=True):
@@ -190,26 +224,26 @@ class Field(object):
         :param batch_data: list[list[str]]
         :return:
         """
-
         seq_num = 2 if self.bert_flag else 1
         batch_res = [[] for _ in range(seq_num)]
-        #batch_res = [[]]
-        padded_res = [None for _ in range(seq_num)]
+        # #batch_res = [[]]
+        padded_res = []
         if self.seq_flag:
             for seq in batch_data:
                 # seq_num = np.array(seq).ndim
-                seq_res = self.texts_to_ids(seq, seq_len=self.fix_length)
+                seq_res = self.texts_to_ids(seq, seq_len=self.fix_length, max_len=self.max_length)
                 for i in range(seq_num):
                     batch_res[i].append(seq_res[i])
             if padding:
-                for i in range(len(batch_res)):
-                    padded_res[i] = self.pad_sequences(batch_res[i], length=self.fix_length, padding=self.vocab.PAD)
+                for i in range(seq_num):
+                    padded_res.append(self.pad_sequences(batch_res[i], length=self.fix_length, padding=self.vocab.PAD))
                 # padded_seqs = self.pad_sequences(batch_ids, length=self.fix_length, padding=self.vocab.PAD)
                 return tuple(padded_res) if len(padded_res)>1 else padded_res[0]
             return tuple(batch_res) if len(batch_res)>1 else batch_res[0]
-        else:
-            return tf.keras.utils.to_categorical(batch_data, num_classes=self.num_classes)
-            #TODO:这种似乎只能解决label的问题，对于input的部分无法记录cate和内容的对应关系，后面应该加入label encoder来解决
+        # elif self.categorical:
+        return tf.keras.utils.to_categorical(batch_data, num_classes=self.num_classes)
+        #TODO:这种似乎只能解决label的问题，对于input的部分无法记录cate和内容的对应关系，后面应该加入label encoder来解决
+
 
     def process_step(self, step_data, padding=True):
         """
@@ -218,17 +252,27 @@ class Field(object):
         :param padding:
         :return:
         """
+        seq_num =2 if self.bert_flag else 1
+        step_res = []
+        padded_res = []
         if self.seq_flag:
-            step_ids = self.texts_to_ids(step_data, seq_len=self.fix_length)
+            seq_res = self.texts_to_ids(step_data, seq_len=self.fix_length, max_len=self.max_length)
+            for i in range(seq_num):
+                step_res.append(seq_res[i])
             if padding:
-                padded_seq = self.pad_sequence(step_ids, length=self.fix_length, padding=self.vocab.PAD)
-                return padded_seq
-            return step_ids
-        else:
-            return tf.keras.utils.to_categorical(step_data, num_classes=self.num_classes)
-            # TODO:这种似乎只能解决label的问题，对于input的部分无法记录cate和内容的对应关系，后面应该加入label encoder来解决
+                for i in range(seq_num):
+                    padded_res.append(self.pad_sequence(step_res[i], length=self.fix_length, padding=self.vocab.PAD))
+                # padded_seq = self.pad_sequence(seq_res[], length=self.fix_length, padding=self.vocab.PAD)
+                return tuple(padded_res) if len(padded_res)>1 else padded_res[0]
+            return tuple(step_res) if len(step_res)>1 else step_res[0]
+        # elif self.categorical:
+        return tf.keras.utils.to_categorical(step_data, num_classes=self.num_classes)
+        # TODO:这种似乎只能解决label的问题，对于input的部分无法记录cate和内容的对应关系，后面应该加入label encoder来解决
 
     def pad_sequence(self, input_seq, length=None, padding=0):
+        if not length:
+            length = len(input_seq)
+            # return np.array([input_seq])
         if not self.pad_first:
             padded = np.array([np.concatenate([input_seq, [padding] * (length - len(input_seq))]) \
                 if len(input_seq)<length else input_seq[:length]])

@@ -18,12 +18,17 @@ class BaseProcessor(object):
     def read4clf(cls):
         raise NotImplementedError
 
+    @staticmethod
     def read4seq(cls):
         raise NotImplementedError
 
-    # Save dataset for text classification to file.
+    @staticmethod
+    def read4ner(cls):
+        raise NotImplementedError
+
     @staticmethod
     def write_to_clf(clf_data, save_file):
+        # Save dataset for text classification to file.
         """
         clf_data: List[List[str]] [[text1, label1],[text2,label2]...]
         file format: tsv, row: text + tab + label
@@ -42,6 +47,12 @@ class BaseProcessor(object):
 
     @staticmethod
     def write_to_ner(cls, ner_data, save_file):
+        """
+        :param cls:
+        :param ner_data:
+        :param save_file:
+        :return:
+        """
         with open(save_file, 'w', encoding='utf-8')as f:
             f.writelines("\n".join(["\t".join(str(r) for r in row) for row in ner_data]))
 
@@ -63,7 +74,7 @@ class THUCNewsProcessor(BaseProcessor):
         for cate in self.categories:
             cate_path = str(os.path.join(self.data_path, cate))
             # print(cate_path)
-            for cate_file in tqdm.tqdm(os.listdir(cate_path)[:1000]): ##TODO: 后续可加入frac参数，控制数据比例
+            for cate_file in tqdm.tqdm(os.listdir(cate_path)[:200]): ##TODO: 后续可加入frac参数，控制数据比例
                 if cate_file.split('.')[-1]=="txt":
                     text_in = self.open_file(os.path.join(cate_path, cate_file)).read().\
                         replace("\n"," ").replace("\t", " ").strip()
@@ -75,3 +86,16 @@ class THUCNewsProcessor(BaseProcessor):
         if not os.path.exists(standard_path) or refresh==True:
             all_data = self.read4clf()
             self.write_to_clf(all_data, standard_path)
+
+# class MSRAChineseProcessor(BaseProcessor):
+#     """
+#     Process MSRA NER Dataset to a standard format for sequence labeling.
+#     """
+#
+#     def __init__(self, data_path):
+#         super(MSRAChineseProcessor, self).__init__(data_path)
+#
+#     def read4ner(self):
+
+class SeqLabelJsonProcessor(BaseProcessor):
+    pass

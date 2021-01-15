@@ -8,10 +8,10 @@
 import os
 import tensorflow as tf
 import pickle
-from utils import Example, Step
+from data_utils import Example, Step
 import numpy as np
 class Pipeline(object):
-    def __init__(self, raw_data=None, standard_data=None, processor_cls=None, dataloader_cls=None):
+    def __init__(self, raw_data=None, standard_data=None, processor_cls=None, dataloader_cls=None, **kwargs):
         self.raw_data = raw_data
         self.standard_data = standard_data
         self.processor_cls = processor_cls
@@ -22,7 +22,17 @@ class Pipeline(object):
         self.fields_dict = None
         self.vocab_group = None
         self.bert_dict = None
-        # self.fields = None
+        self.num_classes = None        # if it's a task for classification, specify the number of categories; also for the ner task
+
+        if 'num_classes' in kwargs:
+            self.num_classes = kwargs['num_classes']
+        if 'bert_pretrained_path' in kwargs:
+            self.bert_pretrained_path=kwargs['bert_pretrained_path']
+        if 'fix_length' in kwargs:
+            self.fix_length = kwargs['fix_length']
+        if 'max_length' in kwargs:
+            self.max_length=kwargs['max_length']
+            print("pipeline max_length", self.max_length)
 
     def process_data(self, refresh):
         """
@@ -39,7 +49,7 @@ class Pipeline(object):
 
         print("File saved at {}.".format(self.standard_data))
 
-    def build_field(self):
+    def build_field(self, **kwargs):
         """
         子类自定义根据数据情况实现功能
         """
@@ -54,14 +64,20 @@ class Pipeline(object):
         :param batch_size: loader的batch size
         :return:
         """
-        self.data_loader = self.dataloader_cls(self.standard_data, \
-                                                batch_size=batch_size, fields=self.fields_dict, vocab_group=self.vocab_group, bert_dict=self.bert_dict)
-        print("Start loading data: {}".format(self.standard_data))
-        self.data_loader.load_data()
-        print("Loader built and loading finished")
+        self.data_loader = self.dataloader_cls(batch_size=batch_size,
+                                               fields=self.fields_dict,
+                                               vocab_group=self.vocab_group,
+                                               bert_dict=self.bert_dict)
 
-    def train_dev_split(self, train_ratio=0.8, dev_ratio=0.1):
-        self.train_loader, self.dev_loader, self.test_loader = self.data_loader.train_dev_split(train_ratio, dev_ratio)
+        print("Start loading data: {}".format(self.standard_data))
+        ## TODO: 可在直接创建dataloader时就完成数据读取init
+        data_examples = self.data_loader.load_data(self.standard_data)
+        print("Loader built and loading finished")
+        return data_examples
+
+    def train_dev_split(self, examples_dict, train_ratio=0.8, dev_ratio=0.1):
+        self.train_loader, self.dev_loader, self.test_loader = self.data_loader.train_dev_split\
+            (examples_dict, train_ratio, dev_ratio)
 
     def build_vocab(self):
         self.train_loader.build_vocab()
@@ -90,12 +106,14 @@ class Pipeline(object):
         """
         raise NotImplementedError
 
-    def build(self, batch_size=32, data_refresh=False):
+    def build(self, tokenizer, batch_size=32, data_refresh=False):
         self.process_data(refresh=data_refresh)
-        self.build_field()
-        # print(self.bert_dict)
-        self.build_loader(batch_size=batch_size)
-        self.train_dev_split()
+        self.build_field(tokenizer=tokenizer,
+                         num_classes=self.num_classes,
+                         max_length=self.max_length,
+                         fix_length=self.fix_length)
+        examples_dict = self.build_loader(batch_size=batch_size)
+        self.train_dev_split(examples_dict)
         self.build_vocab()
         self.build_iter()
         self.build_model()
@@ -123,7 +141,7 @@ class Pipeline(object):
         if weights_only:
             if not self.model:
                 self.build_model()
-            self.model.load_weights(os.path.join(model_path, model_file))
+            self.model.load_weights(os.path.join(model_path, model_file))# .expect_partial()
         else:
             self.model = tf.keras.models.load_model(model_file)
 
@@ -157,5 +175,8 @@ class Pipeline(object):
             # print(step.step_x, len(step.step_x))
             return self.model.predict(step.step_x)[0]
 
-
         # return self.model.predict(text)
+
+    def inference_batch(self):
+        ## TODO: 编写用于批量预测的方法
+        raise NotImplementedError

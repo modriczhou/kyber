@@ -11,7 +11,11 @@ class BaseEvaluator(tf.keras.callbacks.Callback):
     pass
 
 class Evaluator4Clf(tf.keras.callbacks.Callback):
+    """
+    Custom callback for classification task
+    """
     def __init__(self, pipeline, log_path, model_path):
+        super(Evaluator4Clf, self).__init__()
         self.best_f1 = 0.
         self.pipeline = pipeline
         # self.valid_data = self.pipeline.dev_iter.forfit()
@@ -48,7 +52,6 @@ class Evaluator4Clf(tf.keras.callbacks.Callback):
         acc = right/len(valid_y)
         res = fscore(valid_true, valid_y, average='macro')
         return acc, res[0], res[1], res[2]
-
 
 class Evaluator4Ner(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs=None):

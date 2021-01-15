@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+#
 import tensorflow as tf
 import os
 import json
@@ -17,11 +18,8 @@ class BertEncoder(tf.keras.Model):
         self.num_attention_heads = config.num_attention_heads
         self.hidden_size = config.hidden_size
         self.hidden_dropout_prob = config.hidden_dropout_prob
-        # self.num_attention_heads = confg
-        # vocab_size, hidden_size, max_position_embeddings, type_vocab_size, initializer_range
         self.intermediate_size = config.intermediate_size
         self.layer_norm_eps = config.layer_norm_eps
-        # print(self.layer_norm_eps)
 
         self.initializer = tf.keras.initializers.TruncatedNormal(config.initializer_range)
         self.embeddings = BertEmbeddings(self.config, name="embeddings")
@@ -35,17 +33,15 @@ class BertEncoder(tf.keras.Model):
         self.LayerNorm = tf.keras.layers.LayerNormalization(epsilon=self.layer_norm_eps, name="LayerNorm")
 
         self.dropout = layers.Dropout(self.hidden_dropout_prob)
-        # self.dense =
         self.pooler = layers.Dense(units=self.hidden_size,
                                    kernel_initializer=self.initializer,
                                    activation='tanh',
                                    name='pooler')
-        #x_in = Input(shape=(None, ), name='Input-Token')
-        #s_in = Input(shape=(None, ), name='Input-Segment')
+
+        # init with Model API to build
         inputs_ids = Input(shape=(None, ), dtype=tf.float32)
         type_ids = Input(shape=(None, ), dtype=tf.float32)
         inputs = [inputs_ids, type_ids]
-
         super(BertEncoder, self).__init__(inputs=inputs, outputs = self.call(inputs, training=False))
 
 

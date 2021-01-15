@@ -9,7 +9,7 @@
 import tensorflow as tf
 from tensorflow.python.keras.layers import Embedding
 from tensorflow.python.keras import layers
-# from tensorflow.keras import layers
+from utils import shape_list
 
 class BertEmbeddings(layers.Layer):
     """
@@ -55,10 +55,10 @@ class BertEmbeddings(layers.Layer):
 
 
     def call(self, inputs, **kwargs):
-
         input_ids,token_type_ids = inputs[0], inputs[1]
-        # position_ids = inputs["position_ids"]
-        position_ids = tf.range(start=0, limit=self.max_position_embeddings, delta=1)
+        shape = shape_list(input_ids)
+        seq_len = shape[1]
+        position_ids = tf.range(start=0, limit=seq_len, delta=1)
         word_embeds = self.word_embeddings(input_ids)
         pos_embeds = self.position_embeddings(position_ids)
         token_type_embeds = self.token_type_embeddings(token_type_ids)
@@ -77,4 +77,3 @@ class TokenAndPositionEmbedding(layers.Layer):
         positions = self.pos_emb(positions)
         x = self.token_emb(x)
         return x + positions
-

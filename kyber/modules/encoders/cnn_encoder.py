@@ -16,14 +16,14 @@ class CnnEncoder(layers.Layer):
     """
     Basic Text CNN encoders Implementation
     """
-    def __init__(self, embedding_dim, num_filters=512, input_length=256, drop_ratio=0.5):
+    def __init__(self, embedding_dim, num_filters=512, input_length=256, drop_ratio=0.5, filter_sizes=None):
         super(CnnEncoder, self).__init__()
         # self.embedding_exclusive = embedding_exclusive
         # if not self.embedding_exclusive:
         #     self.embedding = Embedding(input_dim=vocab_size, output_dim=)
         self.num_filters = num_filters
         self.input_length = input_length
-        self.filter_sizes = [3,4,5]
+        self.filter_sizes = filter_sizes if filter_sizes else [3,4,5]
         self.drop_ratio = drop_ratio
         self.embedding_dim = embedding_dim
 
@@ -39,6 +39,7 @@ class CnnEncoder(layers.Layer):
         self._maxpool_layer_0 = MaxPool2D(pool_size=(self.input_length + 1 - self.filter_sizes[0], 1), strides=(1,1), padding='valid')
         self._maxpool_layer_1 = MaxPool2D(pool_size=(self.input_length + 1 - self.filter_sizes[1], 1), strides=(1, 1), padding='valid')
         self._maxpool_layer_2 = MaxPool2D(pool_size=(self.input_length + 1 - self.filter_sizes[2], 1), strides=(1, 1), padding='valid')
+
         super(CnnEncoder, self).build(input_shape)
 
     def call(self, embeds, **kwargs):

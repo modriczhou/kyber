@@ -2,7 +2,7 @@
 # 工具函数
 
 import unicodedata, re
-from utils.utils import is_string
+from utils import is_string
 from io import open
 
 

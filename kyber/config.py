@@ -5,23 +5,29 @@
 # @Site    : 
 # @File    : config.py
 # @Software: PyCharm
-from utils import *
+from data_utils import *
 import json
 
 class Config:
     thu_news_raw_data = "../test_data/raw_data/text_classification/THUCNews"
     thu_news_standard_data = "../test_data/standard/text_classification/THUCNews/"
+    msra_standard_data_train = "../test_data/standard/sequence_labeling/msra_chinese/msra_train_bio.txt"
+    msra_standard_data_test = "../test_data/standard/sequence_labeling/msra_chinese/msra_test_bio.txt"
 
     standard_filename_clf = "standard_clf_data.tsv"
 
     text_cnn_thucnews_model_path = "../saved_models/text_cnn_thucnews/"
     fasttext_thucnews_model_path = "../saved_models/fasttext_thucnews/"
     bert_fc_thucnews_model_path = "../saved_models/bert_fc_thucnews/"
+    bert_ner_msra_model_path = "../saved_models/bert_ner_msra/"
 
     summary_log_path = "../summary_logs/"
     text_cnn_thucnews_log_path = "../summary_logs/text_cnn_thucnews/"
     fasttext_thucnews_log_path = "../summary_logs/fasttext_thucnews"
     bert_fc_thucnews_log_path = "../summary_logs/bert_fc_thucnews/"
+    bert_ner_msra_log_path = "../summary_logs/bert_ner_msra/"
+
+
 
 class BertConfig(object):
     '''
@@ -54,4 +60,12 @@ class BertConfig(object):
                     setattr(self, key, bert_config[key])
 
 class TextCNNParas:
-    pass
+    filter_sizes = [3,4,5]
+    embedding_dim = 100
+    fix_seq_length = 512
+    learning_rate = 0.001
+
+class FastTextParas:
+    embedding_dim = 100
+    learning_rate = 0.001
+
