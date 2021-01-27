@@ -8,5 +8,4 @@ __*__
 saved_models/
 /saved_models/
 _*
-/saved_models/
-
+/summary_logs/

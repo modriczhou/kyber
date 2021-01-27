@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 from models import *
 import tensorflow as tf
 from config import *
@@ -20,7 +19,7 @@ class BertFCPipeline(Pipeline):
 
         news_txt_field = Field(name='text', tokenizer=None, seq_flag=True, bert_flag=True, max_length=max_length)
         label_filed = Field(name='label', tokenizer=None, seq_flag=False, is_target=True, categorical=True,
-                            num_classes=self.num_labels)
+                            num_classes=self.num_classes)
         self.fields_dict = {"text": news_txt_field, "label": label_filed}
         self.vocab_group = [["text"]]
         self.bert_dict = self.bert_pretrained_path['vocab_path']
@@ -116,3 +115,4 @@ class TextCNNPipeline(Pipeline):
         self.model.fit(self.train_iter.forfit(), steps_per_epoch=len(self.train_iter), epochs=epochs, \
                             validation_data=self.dev_iter.forfit(), validation_steps=len(self.dev_iter),
                             callbacks=callbacks)
+

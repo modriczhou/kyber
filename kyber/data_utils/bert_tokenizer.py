@@ -39,10 +39,11 @@ class BasicTokenizer(object):
             text = ''.join(
                 [ch for ch in text if unicodedata.category(ch) != 'Mn'])
             text = text.lower()
-
+        #print(add_cls)
         tokens = self._tokenize(text)
         if add_cls:
             tokens.insert(0, self._token_cls)
+            # print(tokens)
         if add_sep:
             tokens.append(self._token_sep)
 

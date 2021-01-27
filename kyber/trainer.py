@@ -44,7 +44,7 @@ class Trainer(object):
 
     def train(self):
         self.pipeline = self.pipeline_cls(raw_data=self.raw_data,
-                                     standard_data=self.standard_data,
+                                     standard_data_dict=self.standard_data,
                                      processor_cls=self.processor_cls,
                                      dataloader_cls=self.dataloader_cls,
                                      num_classes=self.num_classes,
@@ -52,13 +52,14 @@ class Trainer(object):
                                      fix_length=self.fix_length,
                                      max_length=self.max_length)
 
-        evaluator = Evaluator4Clf(self.pipeline, self.log_path, self.model_save_path)
-        tb_callback = TensorBoard(log_dir=self.log_path)
+        #evaluator = Evaluator4Clf(self.pipeline, self.log_path, self.model_save_path)
+        #tb_callback = TensorBoard(log_dir=self.log_path)
 
         self.pipeline.build(tokenizer=self.tokenizer,
                        batch_size=self.batch_size,
                        data_refresh=self.data_refresh)
-        self.pipeline.train(epochs=self.epochs, callbacks=[evaluator, tb_callback])
+        # self.pipeline.train(epochs=self.epochs, callbacks=[evaluator, tb_callback])
+        self.pipeline.train(epochs=self.epochs, callbacks=[])
         self.pipeline.test()
 
     def inference(self, row):

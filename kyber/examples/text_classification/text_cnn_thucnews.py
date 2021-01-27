@@ -13,8 +13,10 @@ from data_utils.tokenizer import JiebaTokenizer
 from trainer import Trainer
 
 def train():
+    standard_data_dict = {"train":os.path.join(Config.thu_news_standard_data, Config.standard_filename_clf)}
+
     trainer = Trainer(raw_data=Config.thu_news_raw_data,
-                      standard_data=os.path.join(Config.thu_news_standard_data,Config.standard_filename_clf),
+                      standard_data=standard_data_dict,
                       processor_cls=THUCNewsProcessor,
                       dataloader_cls=ClassifierLoader,
                       pipeline_cls=TextCNNPipeline,
@@ -23,7 +25,7 @@ def train():
                       tokenizer=JiebaTokenizer,
                       batch_size=32,
                       num_classes=10,
-                      epochs=1,
+                      epochs=2,
                       fix_length=512,
                       data_refresh=True)
     trainer.train()
@@ -36,4 +38,4 @@ def predict():
 
 if __name__ == '__main__':
     train()
-    predict()
+    # predict()

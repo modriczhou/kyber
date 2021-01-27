@@ -31,7 +31,6 @@ class BaseLoader(object):
         # self._steps = len(self._all_data[0]) // self.batch_size + int(len(self._all_data[0]) % self.batch_size != 0)
         self.map_dict_field()
 
-
     def map_dict_field(self):
         for i, group in enumerate(self._vocab_group):
             self._vocab2field[i] = group
@@ -46,8 +45,13 @@ class BaseLoader(object):
         for vocab_key in self._vocab2field:
             # print(self._vocab2field[vocab_key])
             if not self._fields[self._vocab2field[vocab_key][0]].bert_flag:
-                vocab = Vocab(vocab_file=None, vocab_size=vocab_size, min_freq=min_freq)
-                vocab.fit_on_examples(self._all_examples, self._vocab2field[vocab_key])
+                # vocab = Vocab(vocab_file=None, vocab_size=vocab_size, min_freq=min_freq)
+                if not self._fields[self._vocab2field[vocab_key][0]].vocab_reserved:
+                    vocab = Vocab(vocab_file=None, vocab_size=vocab_size, min_freq=min_freq, reserved=False)
+                else:
+                    vocab = Vocab(vocab_file=None, vocab_size=vocab_size, min_freq=min_freq, reserved=True)
+                # print(vocab_key)
+                vocab.fit_on_examples(self._all_examples, [(k, self._fields[k]) for k in self._vocab2field[vocab_key]])
             else:
                 vocab = BertVocab(self._bert_dict)
             self.vocabs[vocab_key] = vocab
@@ -164,15 +168,17 @@ class SeqLabelLoader(BaseLoader):
                     for row in f.readlines():
                         row = row.strip()
                         if row=="":
-                            if columns:
-                                examples.append(Example.from_list(columns, fields_dict=self._fields))
+                            if columns and all(len(col)==len(columns[0]) for col in columns):
+                                # assert len(columns[0])==len(columns[1]), columns
+                                examples.append(Example.from_list(columns, fields_dict=self._fields, label_flg=True))
+                            columns = []
                         else:
                             for i, column in enumerate(row.split(self.sep)):
                                 if len(columns)<i+1:
                                     columns.append([])
                                 columns[i].append(column)
-                    if columns:
-                        examples.append(Example.from_list(columns, fields_dict=self._fields))
+                    if columns and all(len(col)==len(columns[0]) for col in columns):
+                        examples.append(Example.from_list(columns, fields_dict=self._fields, label_flg=True))
 
                 examples_dict[key] = examples
         return examples_dict

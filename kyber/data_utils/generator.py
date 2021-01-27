@@ -39,14 +39,20 @@ class Generator4Clf(DataGenerator):
                     x_data = []
                     # print(batch_data)
                     for name, field in self._fields.items():
-                        # print(name, field)
                         if not field.is_target:
                             x_data.append(getattr(batch_data,name))
                         else:
                             y_data.append(getattr(batch_data,name))
+                            ## TODO: 为什么文本分类不需要expand，应该是没有触发y_true和y_pred的squeeze(t, [-1])条件，why？
+                            if field.expand_flag:   # 将label最后扩充一个维度，[1,2,3] --> [[1],[2],[3]], tf 1x 计算acc
+                                y_data[-1] = np.expand_dims(y_data[-1], axis=-1)
                     # 判断多输入多输出
                     batch_x = x_data[0] if len(x_data)==1 else x_data
                     batch_y = y_data[0] if len(y_data)==1 else y_data
+                    # print(batch_x[0].shape, batch_y.shape)
+                    # print(batch_y.shape)
+                    # batch_y = np.expand_dims(batch_y, axis=-1)
+                    # print(batch_y.shape)
                     yield batch_x, batch_y
 
                 cur_batch, cur_size = [], 0
@@ -69,11 +75,11 @@ class Batch(object):
             self.fields = fields
             self.input_fields = [k for k, v in fields.items() if v is not None and not v.is_target]
             self.target_fields = [k for k, v in fields.items() if v is not None and v.is_target]
-
             for name, field in fields.items():
                 if field is not None:
                     field_batch = [getattr(x, name) for x in batch_data]
                     setattr(self, name, field.process_batch(field_batch))
+                    
 
 class Step(object):
     """

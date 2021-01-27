@@ -15,12 +15,27 @@ class BertTokenClfPipeline(Pipeline):
         Model:  bert + fc
     """
     def build_field(self, **kwargs):
-        news_txt_field = Field(name='text', tokenizer=kwargs['tokenizer'], seq_flag=True)
+        max_length=None
+        if 'max_length' in kwargs:
+            max_length = kwargs['max_length']
 
-        label_filed = Field(name='label', tokenizer=None, seq_flag=True, is_target=True)
+        news_txt_field = Field(name='text',
+                               tokenizer=kwargs['tokenizer'],
+                               seq_flag=True,
+                               bert_flag=True,
+                               max_length=max_length)
 
-        self.fields_dict = {"text": news_txt_field, "label": label_filed} ## 顺序和column一致
+        label_field = Field(name='label',
+                            tokenizer=None,
+                            seq_flag=True,
+                            is_target=True,
+                            vocab_reserved=False,
+                            max_length=max_length,
+                            expand_flag=True)
+
+        self.fields_dict = {"text": news_txt_field, "label": label_field} ## 顺序和column一致
         self.vocab_group = [["text"],["label"]]
+        self.bert_dict = self.bert_pretrained_path['vocab_path']
 
     def build_model(self, ):
         self.model = BertNer(num_labels=self.num_classes,

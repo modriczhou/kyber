@@ -37,6 +37,7 @@ class BertEncoder(tf.keras.Model):
                                    kernel_initializer=self.initializer,
                                    activation='tanh',
                                    name='pooler')
+        self.add_pooling_layer = add_pooling_layer
 
         # init with Model API to build
         inputs_ids = Input(shape=(None, ), dtype=tf.float32)
@@ -54,10 +55,14 @@ class BertEncoder(tf.keras.Model):
         for i, trans_block in enumerate(self.hidden_layers):
             hidden_states = trans_block(inputs=hidden_states, mask=mask)
 
-        pooled_output = self.pooler(hidden_states[:,0])
+        #outputs = hidden_states
+
+        if self.add_pooling_layer:
+            pooled_output = self.pooler(hidden_states[:,0])
+            return hidden_states, pooled_output
         # print("pooled_output:", pooled_output)
 
-        return hidden_states, pooled_output
+        return hidden_states
 
     # def summary(self, *args):
     #     inputs_ids = Input(shape=(None, ), dtype=tf.float32)
@@ -134,10 +139,11 @@ class BertEncoder(tf.keras.Model):
         #     mapping.extend(block_weight_names)
 
         # if self.with_pool or self.with_nsp:
-        mapping.extend([
-            'bert/pooler/dense/kernel',
-            'bert/pooler/dense/bias',
-        ])
+        if self.add_pooling_layer:
+            mapping.extend([
+                'bert/pooler/dense/kernel',
+                'bert/pooler/dense/bias',
+            ])
             # if self.with_nsp:
             #     mapping.extend([
             #         'cls/seq_relationship/output_weights',

@@ -23,10 +23,10 @@ bert_pretrained_path = {
 }
 
 def train():
-    standard_data_dict = os.path.join(Config.thu_news_standard_data,)
+    standard_data_dict = {"train":os.path.join(Config.thu_news_standard_data, Config.standard_filename_clf)}
 
     trainer = Trainer(raw_data=Config.thu_news_raw_data,
-                      standard_data=os.path.join(Config.thu_news_standard_data,Config.standard_filename_clf),
+                      standard_data=standard_data_dict,
                       processor_cls=THUCNewsProcessor,
                       dataloader_cls=ClassifierLoader,
                       pipeline_cls=BertFCPipeline,

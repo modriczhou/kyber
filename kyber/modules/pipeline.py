@@ -10,10 +10,11 @@ import tensorflow as tf
 import pickle
 from data_utils import Example, Step
 import numpy as np
+
 class Pipeline(object):
-    def __init__(self, raw_data=None, standard_data=None, processor_cls=None, dataloader_cls=None, **kwargs):
+    def __init__(self, raw_data=None, standard_data_dict=None, processor_cls=None, dataloader_cls=None, **kwargs):
         self.raw_data = raw_data
-        self.standard_data = standard_data
+        self.standard_data_dict = standard_data_dict
         self.processor_cls = processor_cls
         self.dataloader_cls = dataloader_cls
         self.data_loader = None
@@ -40,14 +41,15 @@ class Pipeline(object):
         :param standard_data_path: 处理后的标准数据的路径
         :param standard_data_file: 处理后的标准数据的文件名
         """
-        if self.raw_data is None and os.path.exists(self.standard_data):
+        # 判断是否数据均存在
+        if self.raw_data is None and all([os.path.exists(v) for k,v in self.standard_data_dict.items()]):
             return
         else:
             self.processor = self.processor_cls(self.raw_data)
             refresh_flag = True if refresh else False
-            self.processor.save_file(self.standard_data, refresh=refresh_flag)
+            self.processor.save_file(self.standard_data_dict['train'], refresh=refresh_flag)
 
-        print("File saved at {}.".format(self.standard_data))
+        print("File saved at {}.".format(self.standard_data_dict['train']))
 
     def build_field(self, **kwargs):
         """
@@ -69,9 +71,9 @@ class Pipeline(object):
                                                vocab_group=self.vocab_group,
                                                bert_dict=self.bert_dict)
 
-        print("Start loading data: {}".format(self.standard_data))
+        print("Start loading data: {}".format(self.standard_data_dict))
         ## TODO: 可在直接创建dataloader时就完成数据读取init
-        data_examples = self.data_loader.load_data(self.standard_data)
+        data_examples = self.data_loader.load_data(self.standard_data_dict)
         print("Loader built and loading finished")
         return data_examples
 
@@ -138,6 +140,7 @@ class Pipeline(object):
     def load_model(self, model_path, model_file, weights_only = True):
         with open(os.path.join(model_path, "fields_dict.pkl"),"rb") as f:
             self.fields_dict = pickle.load(f)
+            # self.fields_dict = dict()
         if weights_only:
             if not self.model:
                 self.build_model()
@@ -154,7 +157,7 @@ class Pipeline(object):
 
     def inference(self, input, row_type="list"):
         """
-        对单条文本进行预测
+        对单条数据进行预测
         :param text:
         :return:
         """

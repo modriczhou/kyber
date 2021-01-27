@@ -14,21 +14,28 @@ from collections import Counter
 import numpy as np
 
 class BertVocab(object):
-
     def __init__(self, bert_dict):
         print(bert_dict)
         self.tokenizer = Tokenizer(bert_dict, do_lower_case=True)
         self.PAD = self.tokenizer.token_to_id(self.tokenizer._token_pad)
         # self.max_length=max_length
 
-    def text_to_ids(self, text, max_length=512):
+    def text_to_ids(self, text, max_length=512, fix_length=None):
         """
         :param text:
         :return: [input_ids, token_type_ids]
         """
+        ##TODO: 如何对list序列进行encode
         if isinstance(text, str):
-            return self.tokenizer.encode(text, max_length=max_length)
-        
+            return self.tokenizer.encode(text, max_length=max_length, first_length=fix_length)
+        elif isinstance(text, list):
+            ##TODO: 是否需要添加[CLS],[SEP]在NER任务中
+            token_ids = self.tokenizer.tokens_to_ids(text)
+
+            return token_ids[:max_length], [0] * len(token_ids[:max_length])
+
+        ## TODO: fix_length参数
+
 
 class Example(object):
     @classmethod
@@ -85,23 +92,19 @@ class Example(object):
     #             setattr(example, key, fields_dict[key].tokenize(list_row[i]))
     #     return example
 
-
-
-
 class Vocab(object):
     PAD = 0
     SOS = 1
     EOS = 2
     UNK = 3
-
-    def __init__(self, vocab_file=None, vocab_size=None, min_freq=1):
+    def __init__(self, vocab_file=None, vocab_size=None, min_freq=1, reserved=True):
         """
         :param tokenizer: tokenizer based on " " or chinese tokenizer
         """
         self._word2id = {}
         # self._count = 0
         self.embeddings = None
-        self._reserved = ['<PAD>', '<SOS>', '<EOS>', '<UNK>']
+        self._reserved = ['<PAD>', '<SOS>', '<EOS>', '<UNK>'] if reserved else []
         self._id2word = self._reserved[:]
         self._word_counter = Counter()
         self.vocab_size = vocab_size
@@ -118,9 +121,9 @@ class Vocab(object):
         Construct word vocab properties based on list of text sequences.
         """
         for ex in examples_list:
-            for field in field_list:
-                words = getattr(ex, field)
-                if not field.seq_flag:
+            for field_tuple in field_list:
+                words = getattr(ex, field_tuple[0])
+                if not field_tuple[1].seq_flag:
                     words = [words]         # counter update需要iterable的对象
                 self.insert_words(words)
         self.build_vocab()
@@ -171,7 +174,7 @@ class Vocab(object):
 
 class Field(object):
     def __init__(self, name, tokenizer, seq_flag, is_target=False, pad_first=False, categorical=False,
-                 bert_flag=False,fix_length=None, num_classes=None, max_length=None):
+                 bert_flag=False,fix_length=None, num_classes=None, max_length=None, vocab_reserved=True, expand_flag=True):
         self.seq_flag = seq_flag            # 判断该field是否采用序列化tokenize
         self.vocab = None
         self.tokenizer = tokenizer
@@ -183,6 +186,8 @@ class Field(object):
         self.num_classes = num_classes
         self.bert_flag = bert_flag          # 判断该field是否采用bert tokenizer进行处理
         self.max_length = max_length        # 最大长度，适用于bert tokenizer进行encode，vocab进行index转换
+        self.vocab_reserved = vocab_reserved    # 词表中是否使用保留词，主要为了区分 将离散label转为id的情况
+        self.expand_flag = expand_flag if (self.is_target and expand_flag is not None) else False  # 如果作为target，是否扩充维度(-1)，为了计算accuracy
 
     def set_vocab(self, vocab):
         self.vocab = vocab
@@ -201,6 +206,11 @@ class Field(object):
             if isinstance(sentence, str):
                 # 只对str类型进行分词，如果已经是list[word1, word2..]即直接返回
                 return self.tokenizer.tokenize(text=sentence)
+        # if self.is_target:
+        #     if isinstance(sentence, list):
+        #         return [[s] for s in sentence]
+        #     else:
+        #         return [sentence]
         return sentence
 
     def texts_to_ids(self, seq_words, seq_len, max_len):
@@ -209,14 +219,15 @@ class Field(object):
                 ids_array = self.vocab.text_to_ids(seq_words, max_len)
                 if not self.bert_flag:
                     # print(ids_array)
-                    return [ids_array[:seq_len] if seq_len else ids_array]
+                    return [ids_array[:max_len] if max_len else ids_array]
                 else:
                     # 对于bert tokenizer后的结果为[input_ids, token_type_ids]，所以要分别截断
-                    return [ids[:seq_len] if seq_len else ids for ids in ids_array]
+                    return [ids[:max_len] if max_len else ids for ids in ids_array]
 
         # return self.vocab.text_to_ids()
         # return self.vocab.text_to_ids([seq_words], max_len)  #对整个field的值进行index转换
-        return seq_words[:seq_len] if seq_len else seq_words
+
+        return seq_words[:max_len] if max_len else seq_words
 
     def process_batch(self, batch_data, padding=True):
         ##TODO:其中进行encode部分可以抽象出来，考虑和Bert的encode方式进行统一封装;
@@ -241,7 +252,10 @@ class Field(object):
                 return tuple(padded_res) if len(padded_res)>1 else padded_res[0]
             return tuple(batch_res) if len(batch_res)>1 else batch_res[0]
         # elif self.categorical:
-        return tf.keras.utils.to_categorical(batch_data, num_classes=self.num_classes)
+        elif self.categorical:
+            return tf.keras.utils.to_categorical(batch_data, num_classes=self.num_classes)
+        else:
+            return batch_data
         #TODO:这种似乎只能解决label的问题，对于input的部分无法记录cate和内容的对应关系，后面应该加入label encoder来解决
 
 
@@ -265,8 +279,9 @@ class Field(object):
                 # padded_seq = self.pad_sequence(seq_res[], length=self.fix_length, padding=self.vocab.PAD)
                 return tuple(padded_res) if len(padded_res)>1 else padded_res[0]
             return tuple(step_res) if len(step_res)>1 else step_res[0]
-        # elif self.categorical:
-        return tf.keras.utils.to_categorical(step_data, num_classes=self.num_classes)
+        elif self.categorical:
+            return tf.keras.utils.to_categorical(step_data, num_classes=self.num_classes)
+        return step_data
         # TODO:这种似乎只能解决label的问题，对于input的部分无法记录cate和内容的对应关系，后面应该加入label encoder来解决
 
     def pad_sequence(self, input_seq, length=None, padding=0):
