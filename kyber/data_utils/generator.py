@@ -52,7 +52,6 @@ class Generator4Clf(DataGenerator):
                     # print(batch_x[0].shape, batch_y.shape)
                     # print(batch_y.shape)
                     # batch_y = np.expand_dims(batch_y, axis=-1)
-                    # print(batch_y.shape)
                     yield batch_x, batch_y
 
                 cur_batch, cur_size = [], 0

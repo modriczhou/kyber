@@ -27,15 +27,16 @@ def train():
                       num_classes=10,
                       epochs=2,
                       fix_length=512,
-                      data_refresh=True)
+                      data_refresh=False)
     trainer.train()
 
 def predict():
     text_cnn_pipeline = TextCNNPipeline(fix_length=512, num_classes=10)
     text_cnn_pipeline.load_model(Config.text_cnn_thucnews_model_path, "best_model.weights")
-    res = text_cnn_pipeline.inference(["谭望嵩奥运后再吃红牌！20分钟天津陷入10人作战 　　新浪体育讯　北京时间10月22日19:30，2008中超联赛第23轮的比赛打响一场焦点战。领头羊山东鲁能主场迎战9轮不败的强敌天津康师傅队。"],row_type="list")
+    res = text_cnn_pipeline.inference(["我们才能"],row_type="list")
     print(res.argmax())
 
 if __name__ == '__main__':
     train()
     # predict()
+
