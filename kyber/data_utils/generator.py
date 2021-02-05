@@ -56,7 +56,6 @@ class Generator4Clf(DataGenerator):
 
                 cur_batch, cur_size = [], 0
 
-
     def forfit(self):
         while True:
             for d in self.__iter__(True):

@@ -12,7 +12,7 @@ from data_utils import Example, Step
 import numpy as np
 
 class Pipeline(object):
-    def __init__(self, raw_data=None, standard_data_dict=None, processor_cls=None, dataloader_cls=None, **kwargs):
+    def __init__(self, raw_data=None, standard_data_dict=None, processor_cls=None, dataloader_cls=None, data_trec=1.0, **kwargs):
         self.raw_data = raw_data
         self.standard_data_dict = standard_data_dict
         self.processor_cls = processor_cls
@@ -24,7 +24,7 @@ class Pipeline(object):
         self.vocab_group = None
         self.bert_dict = None
         self.num_classes = None        # if it's a task for classification, specify the number of categories; also for the ner task
-
+        self.data_trec = data_trec
         if 'num_classes' in kwargs:
             self.num_classes = kwargs['num_classes']
         if 'bert_pretrained_path' in kwargs:
@@ -74,6 +74,12 @@ class Pipeline(object):
         print("Start loading data: {}".format(self.standard_data_dict))
         ## TODO: 可在直接创建dataloader时就完成数据读取init
         data_examples = self.data_loader.load_data(self.standard_data_dict)
+
+        # 使用trec截取使用的数据量
+        for k, v in data_examples.items():
+            # print(len(v))
+            print(len(v) * self.data_trec, len(v), self.data_trec)
+            data_examples[k] = v[:int(len(v) * self.data_trec)]
         print("Loader built and loading finished")
         return data_examples
 
@@ -144,7 +150,7 @@ class Pipeline(object):
         if weights_only:
             if not self.model:
                 self.build_model()
-            self.model.load_weights(os.path.join(model_path, model_file))# .expect_partial()
+            self.model.load_weights(os.path.join(model_path, model_file)).expect_partial()
         else:
             self.model = tf.keras.models.load_model(model_file)
 

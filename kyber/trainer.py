@@ -23,6 +23,8 @@ class Trainer(object):
                  fix_length=None,
                  max_length=None,       # max length for bert model
                  data_refresh=False,
+                 data_trec = 1.0,
+                 evaluator = None,
                  bert_pretrained_path=None):
 
         self.raw_data = raw_data
@@ -40,7 +42,11 @@ class Trainer(object):
         self.bert_pretrained_path = bert_pretrained_path
         self.fix_length = fix_length
         self.max_length = max_length
+        self.data_trec = data_trec
+        # self.data_trec_none = 0.01
+        self.evaluator_cls = evaluator
         print("trainer max_length:", self.max_length)
+
 
     def train(self):
         self.pipeline = self.pipeline_cls(raw_data=self.raw_data,
@@ -50,16 +56,21 @@ class Trainer(object):
                                      num_classes=self.num_classes,
                                      bert_pretrained_path=self.bert_pretrained_path,
                                      fix_length=self.fix_length,
-                                     max_length=self.max_length)
+                                     max_length=self.max_length,
+                                     data_trec = self.data_trec)
 
-        #evaluator = Evaluator4Clf(self.pipeline, self.log_path, self.model_save_path)
-        #tb_callback = TensorBoard(log_dir=self.log_path)
-
+        # evaluator = Evaluator4Clf(self.pipeline, self.log_path, self.model_save_path)
+        tb_callback = TensorBoard(log_dir=self.log_path)
+        callbacks = [tb_callback]
+        if self.evaluator_cls:
+            callbacks.append(self.evaluator_cls(self.pipeline, self.log_path, self.model_save_path))
         self.pipeline.build(tokenizer=self.tokenizer,
                        batch_size=self.batch_size,
                        data_refresh=self.data_refresh)
-        # self.pipeline.train(epochs=self.epochs, callbacks=[evaluator, tb_callback])
-        self.pipeline.train(epochs=self.epochs, callbacks=[])
+        self.pipeline.train(epochs=self.epochs, callbacks=callbacks)
+        if not self.evaluator_cls:
+            self.pipeline.save(self.model_save_path, "bert_model.weights", fields_save=True, weights_only=True)
+        # self.pipeline.train(epochs=self.epochs, callbacks=[])
         self.pipeline.test()
 
     def inference(self, row):

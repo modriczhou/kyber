@@ -58,3 +58,48 @@ class BertTokenClfPipeline(Pipeline):
         self.model.fit(self.train_iter.forfit(), steps_per_epoch=len(self.train_iter), epochs=epochs, \
                             validation_data=self.dev_iter.forfit(), validation_steps=len(self.dev_iter),
                             callbacks=callbacks)
+
+    def inference(self, input, row_type="list"):
+        """
+        重写序列标注的预测方法
+        :param input:
+        :param row_type:
+        :return:
+        """
+        if self.model is None:
+            print("Model not loaded")
+            return
+        input_example = None
+        if row_type == "list":
+            input_example = Example.from_list(input, self.fields_dict)
+        elif row_type == "tsv":
+            input_example = Example.from_tsv(input, self.fields_dict)
+
+        # print(input_example)
+
+        if input_example:
+            # print("s")
+            step = Step(input_example, self.fields_dict)
+            # print(step.step_x, len(step.step_x))
+            model_res = self.model.predict(step.step_x)[0]
+
+            idxs = model_res.argmax(axis=-1)
+
+            self.target_field = None
+            for f, k in self.fields_dict.items():
+                if k.is_target:
+                    self.target_field = k
+            if not self.target_field:
+                print("Not target field found!")
+                return
+
+            # print(idxs)
+
+
+            return [self.target_field.vocab.id2word(id) for id in idxs]
+
+            # return model_res
+
+
+
+
