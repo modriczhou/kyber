@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
-#
+
 import tensorflow as tf
-import os
-import json
-from modules.encoders.transformer_encoder import *
-from layers.embeddings import BertEmbeddings
-from modules.encoders.transformer_encoder import TransformerBlock
+import tensorflow.keras.layers as layers
+from kyber.modules.encoders import TransformerBlock
+from kyber.layers.embeddings import BertEmbeddings
+from kyber.modules.encoders.transformer_encoder import TransformerBlock
 from tensorflow.python.keras import Input
-from config import BertConfig
+from kyber.config import BertConfig
 
 class BertEncoder(tf.keras.Model):
     def __init__(self, config, add_pooling_layer=True):
@@ -30,7 +29,7 @@ class BertEncoder(tf.keras.Model):
                                                 rate=self.hidden_dropout_prob,
                                                 name="layer_._{}".format(i)) for i in range(self.num_hidden_layers)]
 
-        self.LayerNorm = tf.keras.layers.LayerNormalization(epsilon=self.layer_norm_eps, name="LayerNorm")
+        self.LayerNorm = layers.LayerNormalization(epsilon=self.layer_norm_eps, name="LayerNorm")
 
         self.dropout = layers.Dropout(self.hidden_dropout_prob)
         self.pooler = layers.Dense(units=self.hidden_size,

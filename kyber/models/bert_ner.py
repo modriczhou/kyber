@@ -3,8 +3,10 @@
 
 import tensorflow as tf
 from modules import BertEncoder
-from tensorflow.python.keras.layers import Input, Dense, Dropout, TimeDistributed
+from tensorflow.python.keras.layers import Input, Dense, Dropout
+
 class BertNer(tf.keras.Model):
+
     def __init__(self, num_labels, model_path, bert_config=None):
         """
         :param num_classes: number of categories
@@ -32,5 +34,5 @@ class BertNer(tf.keras.Model):
         outputs = self.linear_out(sequence_output)
         # outputs = TimeDistributed(Dense(self.num_labels, activation='softmax'))(sequence_output)
         # TimeDisrtibuted 没有起到降低参数的作用，和直接用dense似乎效果一样
-        print(outputs.shape)
+
         return outputs

@@ -1,16 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# @Time    : 2020/8/17 16:45
-# @Author  : Yuansheng Zhou
-# @Site    : 
-# @File    : cnn_encoder.py
-# @Software: PyCharm
 
-import tensorflow as tf
 from tensorflow.keras import layers
 from tensorflow.keras.layers import Dense, Embedding, Conv2D, MaxPool2D
 from tensorflow.keras.layers import Reshape, Flatten, Concatenate, Dropout
-from keras import optimizers
 
 class CnnEncoder(layers.Layer):
     """

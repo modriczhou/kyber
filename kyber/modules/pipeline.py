@@ -8,7 +8,7 @@
 import os
 import tensorflow as tf
 import pickle
-from data_utils import Example, Step
+from kyber.data_utils import Example, Step
 import numpy as np
 
 class Pipeline(object):

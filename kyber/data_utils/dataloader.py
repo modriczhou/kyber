@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from data_utils.component import *
-from data_utils.bert_tokenizer import Tokenizer
+from kyber.data_utils.component import *
+from kyber.data_utils.bert_tokenizer import Tokenizer
 from collections import Counter
 import numpy as np
-from data_utils.generator import *
+from kyber.data_utils.generator import *
 import tqdm
 
 class BaseLoader(object):

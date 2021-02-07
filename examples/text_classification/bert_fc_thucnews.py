@@ -22,6 +22,11 @@ bert_pretrained_path = {
     'vocab_path': vocab_path
 }
 
+raw_data = Config.thu_news_raw_data  # THUCNews原始数据
+
+
+
+
 def train():
     standard_data_dict = {"train":os.path.join(Config.thu_news_standard_data, Config.standard_filename_clf)}
 

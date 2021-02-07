@@ -2,7 +2,7 @@
 # 工具函数
 
 import unicodedata, re
-from utils import is_string
+from kyber.utils import is_string
 from io import open
 
 
@@ -16,7 +16,6 @@ def load_vocab(dict_path, encoding='utf-8'):
             token_dict[token] = len(token_dict)
 
     return token_dict
-
 
 class BasicTokenizer(object):
     """分词器基类

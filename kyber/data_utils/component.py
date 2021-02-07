@@ -9,7 +9,7 @@
 import abc
 import os
 import tensorflow as tf
-from data_utils.bert_tokenizer import Tokenizer
+from kyber.data_utils.bert_tokenizer import Tokenizer
 from collections import Counter
 import numpy as np
 

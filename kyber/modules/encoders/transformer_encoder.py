@@ -7,7 +7,7 @@ from tensorflow.keras.layers import Layer
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras import backend as K
-from layers.transformer_layers import *
+from kyber.layers.transformer_layers import *
 
 """
 ## Implement a Transformer block as a layer

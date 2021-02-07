@@ -4,7 +4,7 @@
 Trainer class to select pipeline, control config and parameters
 """
 
-from modules.evaluator import Evaluator4Clf
+from kyber.modules.evaluator import Evaluator4Clf
 from tensorflow.python.keras.callbacks import TensorBoard
 
 class Trainer(object):

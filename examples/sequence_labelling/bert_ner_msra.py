@@ -2,24 +2,17 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2021/1/15 16:08
 # @Author  : Yuansheng Zhou
-# @Site    : 
+# @Site    :
 # @File    : bert_ner_msra.py
 # @Software: PyCharm
 
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-# @Time    : 2021/1/12 15:28
-# @Author  : Yuansheng Zhou
-# @Site    :
-# @File    : bert_fc_thucnews.py.py
-# @Software: PyCharm
 
 import os
 from pipelines.seq_labelling import BertTokenClfPipeline
 from config import Config
-from data_utils import SeqLabelLoader
-from modules.evaluator import Evaluator4Ner
-from trainer import Trainer
+from kyber.data_utils import SeqLabelLoader
+from kyber.modules.evaluator import Evaluator4Ner
+from kyber.trainer import Trainer
 from data_utils.bert_tokenizer import *
 from tensorflow.python.framework import ops
 from tensorflow.python.ops import array_ops

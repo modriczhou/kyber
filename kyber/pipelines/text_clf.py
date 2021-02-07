@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from models import *
+from kyber.models import *
 import tensorflow as tf
-from config import *
-from data_utils import *
-from modules.pipeline import Pipeline
+from kyber.config import *
+from kyber.data_utils import *
+from kyber.modules.pipeline import Pipeline
 
 class BertFCPipeline(Pipeline):
     # Pipeline example for text cnn classification model using THUCNews Data

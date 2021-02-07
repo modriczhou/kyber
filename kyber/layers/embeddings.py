@@ -9,7 +9,7 @@
 import tensorflow as tf
 from tensorflow.python.keras.layers import Embedding
 from tensorflow.python.keras import layers
-from utils import shape_list
+from kyber.utils import shape_list
 
 class BertEmbeddings(layers.Layer):
     """

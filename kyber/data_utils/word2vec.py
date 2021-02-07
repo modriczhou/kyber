@@ -9,7 +9,7 @@
 from gensim.models import Word2Vec
 from gensim.models.word2vec import LineSentence
 from gensim.models import KeyedVectors
-from config import *
+from kyber.config import Config
 import multiprocessing
 import os
 

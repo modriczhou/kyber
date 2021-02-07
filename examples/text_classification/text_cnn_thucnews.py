@@ -6,11 +6,11 @@
     Data:   THUCNews
 """
 import os
-from pipelines.text_clf import TextCNNPipeline
-from config import Config
-from data_utils import THUCNewsProcessor, ClassifierLoader
-from data_utils.tokenizer import JiebaTokenizer
-from trainer import Trainer
+from kyber.pipelines.text_clf import TextCNNPipeline
+from kyber.config import Config
+from kyber.data_utils import THUCNewsProcessor, ClassifierLoader
+from kyber.data_utils.tokenizer import JiebaTokenizer
+from kyber.trainer import Trainer
 
 def train():
     standard_data_dict = {"train":os.path.join(Config.thu_news_standard_data, Config.standard_filename_clf)}

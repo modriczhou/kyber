@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 import tensorflow as tf
 from tensorflow.keras.layers import Input, Dense, Embedding
 
@@ -15,9 +16,6 @@ class FastText(tf.keras.Model):
 
     def call(self, inputs, *args):
         embedding = self.embedding(inputs)
-
-        # encoding = self.cnn_encoder(embedding)
-
         output = self.linear_out(tf.reduce_mean(embedding, axis=1))
         return output
 

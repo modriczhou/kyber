@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
+"""
+定义TextCNN Model
+CNN Encoder为Kim—CNN经典结构
+Embedding->TextCNN->Dense
+"""
 import tensorflow as tf
-from modules.encoders.cnn_encoder import *
-from tensorflow.python.keras.layers import Input, Dense, Embedding, LayerNormalization
+from kyber.modules.encoders import CnnEncoder
+from tensorflow.python.keras.layers import Input, Dense, Embedding
 
 class TextCNN(tf.keras.Model):
     def __init__(self, vocab_size, embedding_dim, num_classes, num_filters=512, seq_len=512, filter_sizes=None):
@@ -13,7 +18,6 @@ class TextCNN(tf.keras.Model):
         self.num_classes = num_classes
         self.filter_sizes = filter_sizes
         self.embedding = Embedding(input_dim=self.vocab_size, output_dim=self.embedding_dim)
-        # self.layer_norm = LayerNormalization(epsilon=1e-6)
         self.cnn_encoder = CnnEncoder(embedding_dim=self.embedding_dim,
                                       num_filters=self.num_filters,
                                       input_length=self.seq_len,
@@ -22,8 +26,6 @@ class TextCNN(tf.keras.Model):
 
     def call(self, inputs, *args):
         embedding = self.embedding(inputs)
-        # print(embedding)
-        # embedding = self.layer_norm(embedding)
         encoding = self.cnn_encoder(embedding)
         output = self.linear_out(encoding)
         return output

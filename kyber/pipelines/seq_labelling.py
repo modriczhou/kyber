@@ -3,10 +3,10 @@
 
 
 import tensorflow as tf
-from modules.pipeline import Pipeline
-from data_utils import Field
-from models import BertNer
-from config import *
+from kyber.modules.pipeline import Pipeline
+from kyber.data_utils import Field
+from kyber.models import BertNer
+from kyber.config import *
 
 class BertTokenClfPipeline(Pipeline):
     # Pipeline example for bert for token classification
@@ -92,14 +92,8 @@ class BertTokenClfPipeline(Pipeline):
             if not self.target_field:
                 print("Not target field found!")
                 return
-
-            # print(idxs)
-
-
             return [self.target_field.vocab.id2word(id) for id in idxs]
-
-            # return model_res
-
+        return None
 
 
 

@@ -2,7 +2,7 @@
 # BertFC model for text classification
 
 import tensorflow as tf
-from modules import BertEncoder
+from kyber.modules import BertEncoder
 from tensorflow.python.keras.layers import Input, Dense
 
 class BertFC(tf.keras.Model):

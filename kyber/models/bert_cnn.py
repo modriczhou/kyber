@@ -1,12 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# @Time    : 2020/10/28 18:15
-# @Author  : Yuansheng Zhou
-# @Site    : 
-# @File    : bert_cnn.py.py
-# @Software: PyCharm
 
-from modules.encoders.cnn_encoder import *
+import tensorflow as tf
+from kyber.modules.encoders import CnnEncoder
 from tensorflow.keras.layers import Input, Dense, Embedding
 
 class BertCNN(tf.keras.Model):

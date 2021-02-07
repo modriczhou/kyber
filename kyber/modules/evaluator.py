@@ -5,7 +5,7 @@ from keras.callbacks import TensorBoard
 import os
 import numpy as np
 from sklearn.metrics import precision_recall_fscore_support as fscore
-from config import Config
+from kyber.config import Config
 
 class BaseEvaluator(tf.keras.callbacks.Callback):
     pass
@@ -53,8 +53,6 @@ class Evaluator4Clf(tf.keras.callbacks.Callback):
         res = fscore(valid_true, valid_y, average='macro')
         return acc, res[0], res[1], res[2]
 
-
-
 class Evaluator4Ner(tf.keras.callbacks.Callback):
     def __init__(self, pipeline, log_path, model_path):
         super(Evaluator4Ner, self).__init__()
@@ -99,6 +97,7 @@ class Evaluator4Ner(tf.keras.callbacks.Callback):
         for x_true, y_true in data:
             y_pred = self.model.predict(x_true).argmax(axis=-1)
             y_true = y_true.squeeze()
+            y_pred, y_true = np.array(y_pred), np.array(y_true)
             mention_predict += (y_pred != self.target_field.vocab.word2id("O")).sum()
             mention_right += ((y_true == y_pred) & (y_pred != self.target_field.vocab.word2id("O"))).sum()
             mention_true = (y_true != self.target_field.vocab.word2id("O")).sum()
@@ -109,7 +108,6 @@ class Evaluator4Ner(tf.keras.callbacks.Callback):
         precision, recall = mention_right/mention_predict, mention_right/mention_true
         f1 = 2 * mention_right / (mention_predict + mention_true)
         return acc, precision, recall, f1
-
 
 class Evaluator4Seq2Seq(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs=None):
