@@ -15,14 +15,18 @@ class Config:
     text_cnn_thucnews_model_path = "saved_models/text_cnn_thucnews/"
     fasttext_thucnews_model_path = "saved_models/fasttext_thucnews/"
     bert_fc_thucnews_model_path = "saved_models/bert_fc_thucnews/"
+
+    rnn_fc_thucnews_model_path = "saved_models/rnn_fc_thucnews/"
     bert_ner_msra_model_path = "saved_models/bert_ner_msra/"
 
     summary_log_path = "summary_logs/"
     text_cnn_thucnews_log_path = "summary_logs/text_cnn_thucnews/"
     fasttext_thucnews_log_path = "summary_logs/fasttext_thucnews"
     bert_fc_thucnews_log_path = "summary_logs/bert_fc_thucnews/"
-    bert_ner_msra_log_path = "summary_logs/bert_ner_msra/"
 
+    rnn_fc_thucnews_log_path = "summary_logs/rnn_fc_thucnews/"
+
+    bert_ner_msra_log_path = "summary_logs/bert_ner_msra/"
 
 class BertConfig(object):
     '''
@@ -64,3 +68,9 @@ class FastTextParas:
     embedding_dim = 100
     learning_rate = 0.001
 
+class RnnFCParas:
+    embedding_dim = 100
+    num_units = 128
+    learning_rate = 0.005
+    cell_type= "lstm"
+    bi_directional = False

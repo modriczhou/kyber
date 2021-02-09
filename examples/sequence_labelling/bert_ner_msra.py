@@ -8,12 +8,12 @@
 
 
 import os
-from pipelines.seq_labelling import BertTokenClfPipeline
-from config import Config
+from kyber.pipelines.seq_labelling import BertTokenClfPipeline
+from kyber.config import Config
 from kyber.data_utils import SeqLabelLoader
 from kyber.modules.evaluator import Evaluator4Ner
 from kyber.trainer import Trainer
-from data_utils.bert_tokenizer import *
+from kyber.data_utils.bert_tokenizer import *
 from tensorflow.python.framework import ops
 from tensorflow.python.ops import array_ops
 from tensorflow.python.keras import backend as K
@@ -39,10 +39,10 @@ def train():
                       log_path=Config.bert_ner_msra_log_path,
                       model_save_path=Config.bert_ner_msra_model_path,
                       batch_size=16,
-                      num_classes=num_labels,
+                      num_classes=num_labels+4,  #加上保留词表个数
                       bert_pretrained_path=bert_pretrained_path,
                       data_refresh=True,
-                      data_trec = 0.01,
+                      data_trec = 0.05,
                       max_length=128,
                       evaluator=Evaluator4Ner,
                       epochs=5)
@@ -67,8 +67,8 @@ if __name__ == '__main__':
     #y_true = [2, 1]
     #y_pred = [[0.1, 0.9, 0.8], [0.05, 0.95, 0]]
     #parse_categorical_accuracy(y_true, y_pred)
-    #train()
-    predict()
+    train()
+    # predict()
 
 
 

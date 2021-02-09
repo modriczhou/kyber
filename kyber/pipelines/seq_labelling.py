@@ -4,7 +4,7 @@
 
 import tensorflow as tf
 from kyber.modules.pipeline import Pipeline
-from kyber.data_utils import Field
+from kyber.data_utils import Field, Example, Step
 from kyber.models import BertNer
 from kyber.config import *
 
@@ -29,7 +29,7 @@ class BertTokenClfPipeline(Pipeline):
                             tokenizer=None,
                             seq_flag=True,
                             is_target=True,
-                            vocab_reserved=False,
+                            vocab_reserved=True,
                             max_length=max_length,
                             expand_flag=True)
 

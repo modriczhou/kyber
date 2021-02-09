@@ -7,6 +7,7 @@ from kyber.layers.embeddings import BertEmbeddings
 from kyber.modules.encoders.transformer_encoder import TransformerBlock
 from tensorflow.python.keras import Input
 from kyber.config import BertConfig
+import tensorflow.keras.backend as K
 
 class BertEncoder(tf.keras.Model):
     def __init__(self, config, add_pooling_layer=True):

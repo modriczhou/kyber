@@ -158,7 +158,7 @@ class SeqLabelLoader(BaseLoader):
         super(SeqLabelLoader, self).__init__(batch_size, fields, vocab_group, bert_dict)
 
     def load_data(self, standard_data_dict):
-        ""
+        """"""
         examples_dict = dict()
         for key, path in standard_data_dict.items():
             if path:

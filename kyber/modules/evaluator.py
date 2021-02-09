@@ -98,13 +98,14 @@ class Evaluator4Ner(tf.keras.callbacks.Callback):
             y_pred = self.model.predict(x_true).argmax(axis=-1)
             y_true = y_true.squeeze()
             y_pred, y_true = np.array(y_pred), np.array(y_true)
-            mention_predict += (y_pred != self.target_field.vocab.word2id("O")).sum()
-            mention_right += ((y_true == y_pred) & (y_pred != self.target_field.vocab.word2id("O"))).sum()
-            mention_true = (y_true != self.target_field.vocab.word2id("O")).sum()
+            mention_predict += ((y_pred !=self.target_field.vocab.word2id("O")) & (y_pred!=self.target_field.vocab.PAD)).sum()
+            mention_right += ((y_true == y_pred) & (y_pred !=self.target_field.vocab.word2id("O")) & (y_pred!=self.target_field.vocab.PAD)).sum()
+            mention_true += ((y_true !=self.target_field.vocab.word2id("O")) & (y_true!=self.target_field.vocab.PAD)).sum()
             right += (y_true == y_pred).sum()
             total += len(y_true.flatten())
 
         acc = right / total
+
         precision, recall = mention_right/mention_predict, mention_right/mention_true
         f1 = 2 * mention_right / (mention_predict + mention_true)
         return acc, precision, recall, f1

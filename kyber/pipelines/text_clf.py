@@ -132,3 +132,49 @@ class TextCNNPipeline(Pipeline):
                             validation_data=self.dev_iter.forfit(), validation_steps=len(self.dev_iter),
                             callbacks=callbacks)
 
+class RnnFCPipeline(Pipeline):
+    # Pipeline example for text cnn classification model using THUCNews Data
+    """
+        Task:   Text Classification
+        Model:  Text CNN (native Kim)
+    """
+    def build_field(self, **kwargs):
+        news_txt_field = Field(name='text', tokenizer=kwargs['tokenizer'], seq_flag=True, fix_length=self.fix_length)
+        label_filed = Field(name='label', tokenizer=None, seq_flag=False, is_target=True, expand_flag=False, categorical=True,
+                            num_classes=self.num_classes)
+        self.fields_dict = {"text": news_txt_field, "label": label_filed}
+        self.vocab_group = [["text"]]
+
+    def build_model(self):
+        self.model = RnnFC(vocab_size=len(self.fields_dict['text'].vocab),
+                           embedding_dim=RnnFCParas.embedding_dim,
+                           num_classes=self.num_classes,
+                           seq_len=self.fix_length,
+                           num_units=RnnFCParas.num_units,
+                           cell_type=RnnFCParas.cell_type,
+                           bi_directional=RnnFCParas.bi_directional)
+
+        ##TODO: 为模型添加默认parameter
+        ##TODO: 添加固定词表大小功能
+
+        ##TODO: use pretrained embeddings
+        self.model.summary()
+
+    def train(self, epochs, callbacks):
+        """
+         Build model, loss, optimizer and train
+        :param epochs: number of epochs in training
+        :param callbacks:
+        :return:
+        """
+        # 二分类问题则选用 binary_cross_entropy
+        if self.num_classes > 2:
+            loss = tf.keras.losses.CategoricalCrossentropy()
+        else:
+            loss = tf.keras.losses.BinaryCrossentropy()
+
+        opt = tf.keras.optimizers.Adam(learning_rate=TextCNNParas.learning_rate)
+        self.model.compile(optimizer=opt, loss=loss, metrics=['accuracy'])
+        self.model.fit(self.train_iter.forfit(), steps_per_epoch=len(self.train_iter), epochs=epochs, \
+                            validation_data=self.dev_iter.forfit(), validation_steps=len(self.dev_iter),
+                            callbacks=callbacks)

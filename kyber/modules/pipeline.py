@@ -87,8 +87,8 @@ class Pipeline(object):
         self.train_loader, self.dev_loader, self.test_loader = self.data_loader.train_dev_split\
             (examples_dict, train_ratio, dev_ratio)
 
-    def build_vocab(self):
-        self.train_loader.build_vocab()
+    def build_vocab(self, vocab_size=None, min_freq=1):
+        self.train_loader.build_vocab(vocab_size=vocab_size, min_freq=min_freq)
         # self.dev_loader.set_vocab(vocabs)
         # self.test_loader.set_vocab(vocabs)
 
@@ -114,7 +114,7 @@ class Pipeline(object):
         """
         raise NotImplementedError
 
-    def build(self, tokenizer, batch_size=32, data_refresh=False):
+    def build(self, tokenizer, batch_size=32, data_refresh=False, vocab_size=None, min_freq=1):
         self.process_data(refresh=data_refresh)
         self.build_field(tokenizer=tokenizer,
                          num_classes=self.num_classes,
@@ -122,7 +122,7 @@ class Pipeline(object):
                          fix_length=self.fix_length)
         examples_dict = self.build_loader(batch_size=batch_size)
         self.train_dev_split(examples_dict)
-        self.build_vocab()
+        self.build_vocab(vocab_size=vocab_size, min_freq=min_freq)
         self.build_iter()
         self.build_model()
 

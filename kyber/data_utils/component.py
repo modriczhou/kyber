@@ -36,7 +36,6 @@ class BertVocab(object):
 
         ## TODO: fix_length参数
 
-
 class Example(object):
     @classmethod
     def from_tsv(cls, tsv_row, fields_dict, sep = '\t', label_flg=True):
@@ -57,7 +56,6 @@ class Example(object):
     @classmethod
     def from_list(cls, list_row, fields_dict, label_flg=False):
         """
-
         :param list_row:
         :param fields_dict:
         :param target_flg: False，即为输入不包含target的部分
@@ -97,6 +95,9 @@ class Vocab(object):
     SOS = 1
     EOS = 2
     UNK = 3
+    ## TODO: 对于label为seq的数据，如何保证vocab.pad和该label应当pad的值相等，例如NER任务重，应当pad为"O"对应的词表id，但是不能保证为0；或者选定可以保留的reserved vocab
+
+
     def __init__(self, vocab_file=None, vocab_size=None, min_freq=1, reserved=True):
         """
         :param tokenizer: tokenizer based on " " or chinese tokenizer

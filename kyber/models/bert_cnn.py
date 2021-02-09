@@ -19,7 +19,7 @@ class BertCNN(tf.keras.Model):
         self.cnn_encoder = CnnEncoder(embedding_dim=self.embedding_dim, num_filters=self.num_filters, input_length=self.seq_len)
         self.linear_out = Dense(units=self.num_classes, activation='softmax')
 
-    def call(self, inputs):
+    def call(self, inputs, **kwargs):
         # print(inputs)
         # print(self.seq_len)
         # print(inputs)

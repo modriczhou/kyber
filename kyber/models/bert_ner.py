@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import tensorflow as tf
-from modules import BertEncoder
+from kyber.modules import BertEncoder
 from tensorflow.python.keras.layers import Input, Dense, Dropout
 
 class BertNer(tf.keras.Model):

@@ -25,7 +25,9 @@ class Trainer(object):
                  data_refresh=False,
                  data_trec = 1.0,
                  evaluator = None,
-                 bert_pretrained_path=None):
+                 bert_pretrained_path=None,
+                 vocab_size=None,
+                 min_freq=1):
 
         self.raw_data = raw_data
         self.standard_data = standard_data
@@ -45,6 +47,9 @@ class Trainer(object):
         self.data_trec = data_trec
         # self.data_trec_none = 0.01
         self.evaluator_cls = evaluator
+        self.vocab_size = vocab_size
+        self.min_freq = min_freq
+
         print("trainer max_length:", self.max_length)
 
 
@@ -66,7 +71,9 @@ class Trainer(object):
             callbacks.append(self.evaluator_cls(self.pipeline, self.log_path, self.model_save_path))
         self.pipeline.build(tokenizer=self.tokenizer,
                        batch_size=self.batch_size,
-                       data_refresh=self.data_refresh)
+                       data_refresh=self.data_refresh,
+                       vocab_size=self.vocab_size,
+                       min_freq = self.min_freq)
         self.pipeline.train(epochs=self.epochs, callbacks=callbacks)
         if not self.evaluator_cls:
             self.pipeline.save(self.model_save_path, "bert_model.weights", fields_save=True, weights_only=True)
