@@ -37,8 +37,8 @@ class CRF(tf.keras.layers.Layer):
         return emit_score + trans_score
 
     def log_norm_func(self):
-        inputs_mask = inputs[:,:-1
-
+        # inputs_mask = inputs[:,:-1]
+        raise NotImplementedError
 
 
 
