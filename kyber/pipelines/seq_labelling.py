@@ -31,7 +31,7 @@ class BertTokenClfPipeline(Pipeline):
                             is_target=True,
                             vocab_reserved=True,
                             max_length=max_length,
-                            expand_flag=True)
+                            expand_flag=True) # 为了使用sparse_category_acc
 
         self.fields_dict = {"text": news_txt_field, "label": label_field} ## 顺序和column一致
         self.vocab_group = [["text"],["label"]]
